@@ -13,7 +13,6 @@ datasource db {
 model Staff {
   id              Int              @id @default(autoincrement())
   password        String
-  email           String           @unique
   firstName       String
   lastName        String
   roles           StaffRole[]
@@ -23,7 +22,6 @@ model Staff {
 model Student {
   id           Int           @id @default(autoincrement())
   password     String
-  email        String        @unique
   firstName    String
   lastName     String
   roles        StudentRole[]
