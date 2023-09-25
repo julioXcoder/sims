@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Staff {
+  id              Int              @id @default(autoincrement())
+  password        String
+  email           String           @unique
+  firstName       String
+  lastName        String
+  roles           StaffRole[]
+  courseInstances CourseInstance[]
+}
+
+model Student {
+  id           Int           @id @default(autoincrement())
+  password     String
+  email        String        @unique
+  firstName    String
+  lastName     String
+  roles        StudentRole[]
+  CAResults    CAResult[]
+  finalResults FinalResult[]
+}
+
+model Role {
+  id       Int           @id @default(autoincrement())
+  name     RoleName      @unique
+  staff    StaffRole[]
+  students StudentRole[]
+}
+
+model StaffRole {
+  staffId Int
+  roleId  Int
+  staff   Staff @relation(fields: [staffId], references: [id])
+  role    Role  @relation(fields: [roleId], references: [id])
+
+  @@id([staffId, roleId])
+}
+
+model StudentRole {
+  studentId Int
+  roleId    Int
+  student   Student @relation(fields: [studentId], references: [id])
+  role      Role    @relation(fields: [roleId], references: [id])
+
+  @@id([studentId, roleId])
+}
+
+enum RoleName {
+  EXAMINATION_OFFICER
+  LECTURE
+  STUDENT
+  STUDENT_PRESIDENT
+  CLASS_REPRESENTATIVE
+}
+
+model AcademicYear {
+  id        Int        @id @default(autoincrement())
+  year      String     @unique
+  semesters Semester[]
+}
+
+model Course {
+  id                 Int              @id @default(autoincrement())
+  name               String
+  maxAssessmentMarks Int
+  finalMarks         Int
+  courseInstances    CourseInstance[]
+}
+
+model CAComponent {
+  id        Int        @id @default(autoincrement())
+  name      String
+  marks     Int
+  CAId      Int
+  CA        CA         @relation(fields: [CAId], references: [id])
+  CAResults CAResult[]
+}
+
+model FinalResult {
+  id               Int            @id @default(autoincrement())
+  marks            Int?
+  studentId        Int
+  student          Student        @relation(fields: [studentId], references: [id])
+  courseInstanceId Int
+  courseInstance   CourseInstance @relation(fields: [courseInstanceId], references: [id])
+}
+
+model Semester {
+  id              Int              @id @default(autoincrement())
+  name            String
+  academicYearId  Int
+  academicYear    AcademicYear     @relation(fields: [academicYearId], references: [id])
+  courseInstances CourseInstance[]
+}
+
+model CAResult {
+  id               Int            @id @default(autoincrement())
+  marks            Int?
+  studentId        Int
+  student          Student        @relation(fields: [studentId], references: [id])
+  componentId      Int
+  component        CAComponent    @relation(fields: [componentId], references: [id])
+  courseInstanceId Int
+  courseInstance   CourseInstance @relation(fields: [courseInstanceId], references: [id])
+}
+
+model CA {
+  id               Int            @id @default(autoincrement())
+  courseInstanceId Int
+  courseInstance   CourseInstance @relation(fields: [courseInstanceId], references: [id])
+  components       CAComponent[]
+}
+
+model CourseInstance {
+  id           Int           @id @default(autoincrement())
+  courseId     Int
+  course       Course        @relation(fields: [courseId], references: [id])
+  semesterId   Int
+  semester     Semester      @relation(fields: [semesterId], references: [id])
+  lecturerId   Int
+  lecturer     Staff         @relation(fields: [lecturerId], references: [id])
+  CAResults    CAResult[]
+  finalResults FinalResult[]
+  CAs          CA[]
+
+  @@unique([courseId, semesterId])
+}
