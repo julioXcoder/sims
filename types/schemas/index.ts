@@ -16,4 +16,14 @@ const studentRoleSchema = z.object({
   role: z.enum(studentRoles),
 });
 
-export { studentSchema, studentRoleSchema };
+const courseSchema = z.object({
+  name: z.string().min(1).max(50),
+  maxAssessmentMarks: z.number(),
+  finalMarks: z.number(),
+});
+
+const academicYearSchema = z.object({
+  year: z.string().min(4).max(10),
+});
+
+export { studentSchema, studentRoleSchema, courseSchema, academicYearSchema };
