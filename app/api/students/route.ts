@@ -16,13 +16,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { firstName, lastName, password } = body;
+    const { firstName, lastName, password, yearId } = body;
+
+    const year = await prisma.year.findUnique({
+      where: { id: yearId },
+    });
+
+    if (!year) {
+      return NextResponse.json(
+        { error: "Year was not found" },
+        { status: 404 },
+      );
+    }
 
     const newStudent = await prisma.student.create({
       data: {
         firstName,
         lastName,
         password,
+        yearId: year.id,
         roles: {
           create: {
             role: {

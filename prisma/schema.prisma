@@ -24,6 +24,8 @@ model Student {
   password     String
   firstName    String
   lastName     String
+  yearId       Int
+  year         Year          @relation(fields: [yearId], references: [id])
   roles        StudentRole[]
   CAResults    CAResult[]
   finalResults FinalResult[]
@@ -68,12 +70,37 @@ model AcademicYear {
   semesters Semester[]
 }
 
+model Department {
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  courses Course[]
+}
+
 model Course {
   id                 Int              @id @default(autoincrement())
   name               String
   maxAssessmentMarks Int
   finalMarks         Int
+  departmentId       Int
+  department         Department       @relation(fields: [departmentId], references: [id])
+  levels             Level[]
   courseInstances    CourseInstance[]
+}
+
+model Level {
+  id       Int    @id @default(autoincrement())
+  name     String // This could be "Diploma", "Bachelor", "Master", etc.
+  courseId Int
+  course   Course @relation(fields: [courseId], references: [id])
+  years    Year[]
+}
+
+model Year {
+  id       Int       @id @default(autoincrement())
+  name     String // This could be "First Year", "Second Year", etc.
+  levelId  Int
+  level    Level     @relation(fields: [levelId], references: [id])
+  students Student[]
 }
 
 model CAComponent {
