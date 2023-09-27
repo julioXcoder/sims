@@ -5,7 +5,7 @@ import z from "zod";
 const BodySchema = z.object({
   marks: z.number(),
   studentId: z.number(),
-  courseInstanceId: z.number(),
+  subjectInstanceId: z.number(),
 });
 
 type Body = z.infer<typeof BodySchema>;
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid data" }, { status: 400 });
     }
 
-    const { studentId, courseInstanceId } = body;
+    const { marks, studentId, subjectInstanceId } = body;
 
     const student = await prisma.student.findUnique({
       where: {
@@ -32,21 +32,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Student Not Found" }, { status: 404 });
     }
 
-    const courseInstance = await prisma.courseInstance.findUnique({
+    const subjectInstance = await prisma.subjectInstance.findUnique({
       where: {
-        id: courseInstanceId,
+        id: subjectInstanceId,
       },
     });
 
-    if (!courseInstance) {
+    if (!subjectInstance) {
       return NextResponse.json(
-        { error: "Course Instance Not Found" },
+        { error: "Subject Instance Not Found" },
         { status: 404 },
       );
     }
 
     const newFinalResult = await prisma.finalResult.create({
-      data: body,
+      data: {
+        marks,
+        studentId: student.id,
+        subjectInstanceId: subjectInstance.id,
+      },
     });
 
     return NextResponse.json(newFinalResult, { status: 201 });

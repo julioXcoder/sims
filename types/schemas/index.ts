@@ -13,18 +13,28 @@ const studentSchema = z.object({
   yearId: z.number(),
 });
 
-const studentRoleSchema = z.object({
-  role: z.enum(studentRoles),
+const lecturerSchema = z.object({
+  firstName: z.string().min(3).max(20),
+  lastName: z.string().min(3).max(20),
+  password: z.string().min(3).max(20),
 });
 
-const courseSchema = z.object({
-  name: z.string().min(1).max(50),
-  maxAssessmentMarks: z.number(),
-  finalMarks: z.number(),
+const studentRoleSchema = z.object({
+  role: z.enum(studentRoles),
 });
 
 const academicYearSchema = z.object({
   year: z.string().min(4).max(10),
 });
 
-export { studentSchema, studentRoleSchema, courseSchema, academicYearSchema };
+const departmentSchema = z.object({
+  name: z.string().min(3).max(40),
+});
+
+export {
+  studentSchema,
+  studentRoleSchema,
+  academicYearSchema,
+  lecturerSchema,
+  departmentSchema,
+};

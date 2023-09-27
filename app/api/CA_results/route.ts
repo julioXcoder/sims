@@ -6,7 +6,7 @@ const BodySchema = z.object({
   marks: z.number(),
   studentId: z.number(),
   componentId: z.number(),
-  courseInstanceId: z.number(),
+  subjectInstanceId: z.number(),
 });
 
 type Body = z.infer<typeof BodySchema>;
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid data" }, { status: 400 });
     }
 
-    const { studentId, componentId, courseInstanceId } = body;
+    const { marks, studentId, componentId, subjectInstanceId } = body;
 
     const student = await prisma.student.findUnique({
       where: {
@@ -46,21 +46,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const courseInstance = await prisma.courseInstance.findUnique({
+    const subjectInstance = await prisma.subjectInstance.findUnique({
       where: {
-        id: courseInstanceId,
+        id: subjectInstanceId,
       },
     });
 
-    if (!courseInstance) {
+    if (!subjectInstance) {
       return NextResponse.json(
-        { error: "Course Instance Not Found" },
+        { error: "Subject Instance Not Found" },
         { status: 404 },
       );
     }
 
     const newCAResult = await prisma.cAResult.create({
-      data: body,
+      data: {
+        marks,
+        studentId: student.id,
+        componentId: component.id,
+        subjectInstanceId: subjectInstance.id,
+      },
     });
 
     return NextResponse.json(newCAResult, { status: 201 });

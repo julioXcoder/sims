@@ -27,12 +27,14 @@ export async function GET(
       include: {
         finalResults: {
           orderBy: [
-            { courseInstance: { semester: { academicYear: { year: "asc" } } } },
-            { courseInstance: { semester: { name: "asc" } } },
+            {
+              subjectInstance: { semester: { academicYear: { year: "asc" } } },
+            },
+            { subjectInstance: { semester: { name: "asc" } } },
           ],
           select: {
             marks: true,
-            courseInstance: {
+            subjectInstance: {
               select: {
                 semester: {
                   select: {
@@ -50,8 +52,10 @@ export async function GET(
         },
         CAResults: {
           orderBy: [
-            { courseInstance: { semester: { academicYear: { year: "asc" } } } },
-            { courseInstance: { semester: { name: "asc" } } },
+            {
+              subjectInstance: { semester: { academicYear: { year: "asc" } } },
+            },
+            { subjectInstance: { semester: { name: "asc" } } },
           ],
           select: {
             marks: true,
@@ -60,7 +64,7 @@ export async function GET(
                 name: true,
               },
             },
-            courseInstance: {
+            subjectInstance: {
               select: {
                 semester: {
                   select: {
@@ -89,8 +93,8 @@ export async function GET(
     // Transform the data
     const resultsByYearAndSemester = studentResults.finalResults.reduce(
       (acc: Record<string, any>, finalResult) => {
-        const year = finalResult.courseInstance.semester.academicYear.year;
-        const semester = finalResult.courseInstance.semester.name;
+        const year = finalResult.subjectInstance.semester.academicYear.year;
+        const semester = finalResult.subjectInstance.semester.name;
 
         if (!acc[year]) {
           acc[year] = {};
@@ -106,7 +110,7 @@ export async function GET(
         acc[year][semester].finals.push(finalResult);
 
         const caResults = studentResults.CAResults.filter(
-          (caResult) => caResult.courseInstance.semester.name === semester,
+          (caResult) => caResult.subjectInstance.semester.name === semester,
         );
 
         acc[year][semester].CA.push(...caResults);

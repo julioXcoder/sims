@@ -3,15 +3,15 @@ import prisma from "@/prisma/client";
 import z from "zod";
 import _ from "lodash";
 
-const CourseInstanceSchema = z.object({
-  courseId: z.number(),
+const SubjectInstanceSchema = z.object({
+  subjectId: z.number(),
   lecturerId: z.number(),
 });
 
 const BodySchema = z.object({
   name: z.string(),
   academicYearId: z.number(),
-  courses: z.array(CourseInstanceSchema),
+  subjects: z.array(SubjectInstanceSchema),
 });
 
 type Body = z.infer<typeof BodySchema>;
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid data" }, { status: 400 });
     }
 
-    const { name, academicYearId, courses } = body;
+    const { name, academicYearId, subjects } = body;
 
     const academicYear = await prisma.academicYear.findUnique({
       where: {
@@ -63,30 +63,30 @@ export async function POST(request: NextRequest) {
     const lecturerData = await prisma.staff.findMany({
       where: {
         id: {
-          in: body.courses.map((course) => course.lecturerId),
+          in: body.subjects.map((subject) => subject.lecturerId),
         },
       },
     });
 
-    if (lecturerData.length !== body.courses.length) {
+    if (lecturerData.length !== body.subjects.length) {
       return NextResponse.json(
         { error: "One or more lecturers not found" },
         { status: 404 },
       );
     }
 
-    // Check if all courses exist
-    const courseData = await prisma.course.findMany({
+    // Check if all subjects exist
+    const subjectData = await prisma.subject.findMany({
       where: {
         id: {
-          in: courses.map((course) => course.courseId),
+          in: subjects.map((subject) => subject.subjectId),
         },
       },
     });
 
-    if (courseData.length !== body.courses.length) {
+    if (subjectData.length !== body.subjects.length) {
       return NextResponse.json(
-        { error: "One or more courses not found" },
+        { error: "One or more subjects not found" },
         { status: 404 },
       );
     }
@@ -98,10 +98,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create new course instances for the semester
-    await prisma.courseInstance.createMany({
-      data: courses.map((course) => ({
-        ...course,
+    // Create new subject instances for the semester
+    await prisma.subjectInstance.createMany({
+      data: subjects.map((subject) => ({
+        ...subject,
         semesterId: newSemester.id,
       })),
     });

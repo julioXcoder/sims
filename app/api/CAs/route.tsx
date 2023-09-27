@@ -4,7 +4,7 @@ import _ from "lodash";
 import z from "zod";
 
 const BodySchema = z.object({
-  courseInstanceId: z.number(),
+  subjectInstanceId: z.number(),
   lecturerId: z.number(),
   components: z.array(
     z.object({
@@ -26,31 +26,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid data" }, { status: 400 });
     }
 
-    const { courseInstanceId, lecturerId, components } = body;
+    const { subjectInstanceId, lecturerId, components } = body;
 
-    const courseInstance = await prisma.courseInstance.findUnique({
+    const subjectInstance = await prisma.subjectInstance.findUnique({
       where: {
-        id: courseInstanceId,
+        id: subjectInstanceId,
       },
     });
 
-    if (!courseInstance) {
+    if (!subjectInstance) {
       return NextResponse.json(
-        { error: "Course Instance Not Found" },
+        { error: "Subject Instance Not Found" },
         { status: 404 },
       );
     }
 
-    if (courseInstance.lecturerId !== lecturerId) {
+    if (subjectInstance.lecturerId !== lecturerId) {
       return NextResponse.json(
-        { error: "You are not authorized to create a CA for this course" },
+        { error: "You are not authorized to create a CA for this subject" },
         { status: 403 },
       );
     }
 
     const newCA = await prisma.cA.create({
       data: {
-        courseInstanceId: courseInstance.id,
+        subjectInstanceId: subjectInstance.id,
       },
     });
 

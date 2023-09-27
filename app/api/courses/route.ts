@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/prisma/client";
-import { courseSchema } from "@/types/schemas";
 import z from "zod";
 import _ from "lodash";
 
@@ -10,9 +9,7 @@ const LevelSchema = z.object({
 });
 
 const BodySchema = z.object({
-  name: z.string(),
-  maxAssessmentMarks: z.number(),
-  finalMarks: z.number(),
+  name: z.string().min(3).max(40),
   departmentId: z.number(),
   levels: z.array(LevelSchema),
 });
@@ -32,7 +29,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, maxAssessmentMarks, finalMarks, departmentId, levels } = body;
+    const { name, departmentId, levels } = body;
 
     // Check if the department exists
     const department = await prisma.department.findUnique({
@@ -51,8 +48,6 @@ export async function POST(request: NextRequest) {
     const newCourse = await prisma.course.create({
       data: {
         name,
-        maxAssessmentMarks,
-        finalMarks,
         departmentId: department.id,
       },
     });
@@ -75,12 +70,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const courseData = _.pick(newCourse, [
-      "id",
-      "name",
-      "maxAssessmentMarks",
-      "finalMarks",
-    ]);
+    const courseData = _.pick(newCourse, ["id", "name"]);
 
     return NextResponse.json(courseData, { status: 201 });
   } catch (ex) {
