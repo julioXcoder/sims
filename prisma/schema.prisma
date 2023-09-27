@@ -85,11 +85,10 @@ model Course {
 }
 
 model Level {
-  id       Int       @id @default(autoincrement())
+  id       Int    @id @default(autoincrement())
   name     String // This could be "Diploma", "Bachelor", "Master", etc.
   courseId Int
-  course   Course    @relation(fields: [courseId], references: [id])
-  subjects Subject[]
+  course   Course @relation(fields: [courseId], references: [id])
   years    Year[]
 }
 
@@ -99,6 +98,7 @@ model Year {
   levelId  Int
   level    Level     @relation(fields: [levelId], references: [id])
   students Student[]
+  subjects Subject[]
 }
 
 model CAComponent {
@@ -146,13 +146,11 @@ model CA {
 }
 
 model Subject {
-  id                 Int               @id @default(autoincrement())
-  name               String
-  maxAssessmentMarks Int
-  finalMarks         Int
-  levelId            Int
-  level              Level             @relation(fields: [levelId], references: [id])
-  subjectInstances   SubjectInstance[]
+  id               Int               @id @default(autoincrement())
+  name             String
+  yearId           Int
+  year             Year              @relation(fields: [yearId], references: [id])
+  subjectInstances SubjectInstance[]
 }
 
 model SubjectInstance {
