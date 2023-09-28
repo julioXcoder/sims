@@ -21,6 +21,71 @@ export async function GET(
       return NextResponse.json({ error: "Student Not Found" }, { status: 404 });
     }
 
+    // const studentResults = await prisma.student.findUnique({
+    //   where: {
+    //     id: student.id,
+    //   },
+    //   include: {
+    //     finalResults: {
+    //       orderBy: [
+    //         {
+    //           subjectInstance: { semester: { academicYear: { year: "asc" } } },
+    //         },
+    //         { subjectInstance: { semester: { name: "asc" } } },
+    //       ],
+    //       select: {
+    //         marks: true,
+    //         subjectInstance: {
+    //           select: {
+    //             semester: {
+    //               select: {
+    //                 name: true,
+    //                 academicYear: {
+    //                   select: {
+    //                     year: true,
+    //                   },
+    //                 },
+    //               },
+    //             },
+    //           },
+    //         },
+    //       },
+    //     },
+    //     CAResults: {
+    //       orderBy: [
+    //         {
+    //           subjectInstance: { semester: { academicYear: { year: "asc" } } },
+    //         },
+    //         { subjectInstance: { semester: { name: "asc" } } },
+    //       ],
+    //       select: {
+    //         marks: true,
+    //         component: {
+    //           select: {
+    //             name: true,
+    //           },
+    //         },
+    //         subjectInstance: {
+    //           select: {
+    //             semester: {
+    //               select: {
+    //                 name: true,
+    //                 academicYear: {
+    //                   select: {
+    //                     year: true,
+    //                   },
+    //                 },
+    //               },
+
+    //             },
+
+    //           },
+    //         },
+    //       },
+    //     },
+    //   },
+    // });
+
     const studentResults = await prisma.student.findUnique({
       where: {
         id: student.id,
@@ -45,6 +110,11 @@ export async function GET(
                         year: true,
                       },
                     },
+                  },
+                },
+                subject: {
+                  select: {
+                    name: true, // select the subject name
                   },
                 },
               },
@@ -75,6 +145,11 @@ export async function GET(
                         year: true,
                       },
                     },
+                  },
+                },
+                subject: {
+                  select: {
+                    name: true, // select the subject name
                   },
                 },
               },
@@ -114,10 +189,35 @@ export async function GET(
       {},
     );
 
+    // const CAResultsByYearAndSemester = studentResults.CAResults.reduce(
+    //   (acc: Record<string, any>, CAResult) => {
+    //     const year = CAResult.subjectInstance.semester.academicYear.year;
+    //     const semester = CAResult.subjectInstance.semester.name;
+
+    //     if (!acc[year]) {
+    //       acc[year] = {};
+    //     }
+
+    //     if (!acc[year][semester]) {
+    //       acc[year][semester] = {
+    //         results: [],
+    //       };
+    //     }
+
+    //     const picked = _.pick(CAResult, ["marks", "component.name"]);
+
+    //     acc[year][semester].results.push(picked);
+
+    //     return acc;
+    //   },
+    //   {},
+    // );
+
     const CAResultsByYearAndSemester = studentResults.CAResults.reduce(
       (acc: Record<string, any>, CAResult) => {
         const year = CAResult.subjectInstance.semester.academicYear.year;
         const semester = CAResult.subjectInstance.semester.name;
+        const subjectName = CAResult.subjectInstance.subject.name;
 
         if (!acc[year]) {
           acc[year] = {};
@@ -129,9 +229,19 @@ export async function GET(
           };
         }
 
+        const subjectIndex = acc[year][semester].results.findIndex(
+          (result: any) => Object.keys(result)[0] === subjectName,
+        );
+
         const picked = _.pick(CAResult, ["marks", "component.name"]);
 
-        acc[year][semester].results.push(picked);
+        if (subjectIndex === -1) {
+          // If the subject does not exist in the results array, add it
+          acc[year][semester].results.push({ [subjectName]: [picked] });
+        } else {
+          // If the subject exists in the results array, push the new result into it
+          acc[year][semester].results[subjectIndex][subjectName].push(picked);
+        }
 
         return acc;
       },
