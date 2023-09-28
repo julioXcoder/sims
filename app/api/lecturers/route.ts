@@ -19,7 +19,10 @@ export async function POST(request: NextRequest) {
     const validation = lecturerSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json({ error: "Invalid data" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid lecture data" },
+        { status: 400 },
+      );
     }
 
     const { firstName, lastName, password } = body;

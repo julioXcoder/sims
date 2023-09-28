@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/prisma/client";
+import _ from "lodash";
 
 interface Props {
   params: { studentId: string };
@@ -91,7 +92,7 @@ export async function GET(
     }
 
     // Transform the data
-    const resultsByYearAndSemester = studentResults.finalResults.reduce(
+    const finalResultsByYearAndSemester = studentResults.finalResults.reduce(
       (acc: Record<string, any>, finalResult) => {
         const year = finalResult.subjectInstance.semester.academicYear.year;
         const semester = finalResult.subjectInstance.semester.name;
@@ -102,25 +103,45 @@ export async function GET(
 
         if (!acc[year][semester]) {
           acc[year][semester] = {
-            finals: [],
-            CA: [],
+            results: [],
           };
         }
 
-        acc[year][semester].finals.push(finalResult);
-
-        const caResults = studentResults.CAResults.filter(
-          (caResult) => caResult.subjectInstance.semester.name === semester,
-        );
-
-        acc[year][semester].CA.push(...caResults);
+        acc[year][semester].results.push(finalResult);
 
         return acc;
       },
       {},
     );
 
-    return NextResponse.json(resultsByYearAndSemester, { status: 200 });
+    const CAResultsByYearAndSemester = studentResults.CAResults.reduce(
+      (acc: Record<string, any>, CAResult) => {
+        const year = CAResult.subjectInstance.semester.academicYear.year;
+        const semester = CAResult.subjectInstance.semester.name;
+
+        if (!acc[year]) {
+          acc[year] = {};
+        }
+
+        if (!acc[year][semester]) {
+          acc[year][semester] = {
+            results: [],
+          };
+        }
+
+        const picked = _.pick(CAResult, ["marks", "component.name"]);
+
+        acc[year][semester].results.push(picked);
+
+        return acc;
+      },
+      {},
+    );
+
+    return NextResponse.json(
+      { CA: CAResultsByYearAndSemester, finals: finalResultsByYearAndSemester },
+      { status: 200 },
+    );
   } catch (ex) {
     // TODO: Log the console.error();
 
