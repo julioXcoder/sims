@@ -2,6 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/prisma/client";
 import { studentSchema } from "@/types/schemas";
 import _ from "lodash";
+import { headers } from "next/headers";
+
+export async function GET(request: NextRequest) {
+  const headersList = headers();
+  const userId = headersList.get("userId");
+
+  if (!userId) {
+    return;
+  }
+
+  const student = await prisma.student.findUnique({
+    where: {
+      id: parseInt(userId),
+    },
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {

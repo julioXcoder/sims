@@ -2,6 +2,8 @@ import React, { ReactNode } from "react";
 import Navbar from "./navbar";
 import Sidebar from "./sidebar";
 
+const fetchStudent = async () => {};
+
 const StudentLayout = ({ children }: { children: ReactNode }) => {
   return (
     <div className="flex flex-col">
