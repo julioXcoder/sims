@@ -106,9 +106,7 @@ const Navbar = () => {
           >
             <div className="-mx-2 -mt-2 mb-2 rounded-t-lg bg-gray-100 px-4 py-2">
               <p className="text-sm text-gray-500">Signed in as</p>
-              <p className="text-sm font-medium text-gray-800">
-                james@si james@si
-              </p>
+              <p className="text-sm font-medium text-gray-800">Julio Njeza</p>
             </div>
             <li>
               <a className="justify-between">
@@ -120,7 +118,7 @@ const Navbar = () => {
               <a>Settings</a>
             </li>
             <li>
-              <a>Logout</a>
+              <a href="/api/auth/logout">logout</a>
             </li>
           </ul>
         </div>

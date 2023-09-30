@@ -2,21 +2,54 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/prisma/client";
 import { studentSchema } from "@/types/schemas";
 import _ from "lodash";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { verifyAuth } from "@/lib";
 
 export async function GET(request: NextRequest) {
-  const headersList = headers();
-  const userId = headersList.get("userId");
+  try {
+    const token = cookies().get("token")?.value;
 
-  if (!userId) {
-    return;
+    const verified =
+      token && (await verifyAuth(token).catch((ex) => console.log(ex)));
+
+    if (!verified) {
+      return NextResponse.json(
+        { error: "An error occurred while processing your request" },
+        { status: 404 },
+      );
+    }
+
+    const student = await prisma.student.findUnique({
+      where: {
+        id: verified.id,
+      },
+      include: {
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+      },
+    });
+
+    if (!student) {
+      return NextResponse.json({ error: "Student not found" }, { status: 404 });
+    }
+
+    const data = {
+      ..._.pick(student, ["id", "firstName", "lastName"]),
+      roles: student.roles.map((studentRole) => studentRole.role.name), // Get role names
+    };
+
+    return NextResponse.json(data, { status: 200 });
+  } catch (ex) {
+    // TODO: Log the console.error();
+
+    return NextResponse.json(
+      { error: "An error occurred while processing your request" },
+      { status: 500 },
+    );
   }
-
-  const student = await prisma.student.findUnique({
-    where: {
-      id: parseInt(userId),
-    },
-  });
 }
 
 export async function POST(request: NextRequest) {

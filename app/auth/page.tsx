@@ -42,6 +42,7 @@ const AuthPage = () => {
 
       if (responseData.redirect) {
         router.push(responseData.redirect);
+        return;
       } else if (responseData.error) {
         setError(responseData.error);
       }

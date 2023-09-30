@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyAuth } from "./lib";
+import { headers } from "next/headers";
 
 // This function can be marked `async` if using `await` inside
 export async function middleware(request: NextRequest) {
@@ -8,15 +9,9 @@ export async function middleware(request: NextRequest) {
   const verified =
     token && (await verifyAuth(token).catch((ex) => console.log(ex)));
 
-  console.log(verified);
   if (request.nextUrl.pathname.startsWith("/auth") && !verified) return;
 
   if (request.url.includes("/auth") && verified) {
-    const userId = verified.id.toString();
-
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set("userId", userId);
-
     return NextResponse.redirect(new URL("/student", request.url));
   }
 
@@ -25,5 +20,5 @@ export async function middleware(request: NextRequest) {
 
 // See "Matching Paths" below to learn more
 export const config = {
-  matcher: ["/student", "/auth"],
+  matcher: ["/student", "/auth", "/api"],
 };
