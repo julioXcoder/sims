@@ -4,7 +4,11 @@ import gon from "@/public/gon.png";
 import logo from "@/public/logo.png";
 import Image from "next/image";
 
-const Navbar = () => {
+interface Props {
+  name: string;
+}
+
+const Navbar = ({ name }: Props) => {
   return (
     <div className="navbar fixed top-0 z-10 flex justify-between bg-base-100 lg:px-4">
       <div className="flex">
@@ -106,7 +110,7 @@ const Navbar = () => {
           >
             <div className="-mx-2 -mt-2 mb-2 rounded-t-lg bg-gray-100 px-4 py-2">
               <p className="text-sm text-gray-500">Signed in as</p>
-              <p className="text-sm font-medium text-gray-800">Julio Njeza</p>
+              <p className="text-sm font-medium text-gray-800">{name}</p>
             </div>
             <li>
               <a className="justify-between">

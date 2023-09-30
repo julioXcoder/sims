@@ -6,16 +6,24 @@ import { headers } from "next/headers";
 // This function can be marked `async` if using `await` inside
 export async function middleware(request: NextRequest) {
   let token = request.cookies.get("token")?.value;
-  const verified =
+  const authUser =
     token && (await verifyAuth(token).catch((ex) => console.log(ex)));
 
-  if (request.nextUrl.pathname.startsWith("/auth") && !verified) return;
+  if (authUser) {
+    const userId = authUser.id.toString();
+    const response = NextResponse.next();
 
-  if (request.url.includes("/auth") && verified) {
+    response.headers.set("userDd", userId);
+    return response;
+  }
+
+  if (request.nextUrl.pathname.startsWith("/auth") && !authUser) return;
+
+  if (request.url.includes("/auth") && authUser) {
     return NextResponse.redirect(new URL("/student", request.url));
   }
 
-  if (!verified) return NextResponse.redirect(new URL("/auth", request.url));
+  if (!authUser) return NextResponse.redirect(new URL("/auth", request.url));
 }
 
 // See "Matching Paths" below to learn more
