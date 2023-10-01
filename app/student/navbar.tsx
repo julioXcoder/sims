@@ -10,7 +10,7 @@ interface Props {
 
 const Navbar = ({ name }: Props) => {
   return (
-    <div className="navbar fixed top-0 z-10 flex justify-between bg-base-100 lg:px-4">
+    <div className="navbar fixed top-0 z-10 flex justify-between bg-base-100 shadow-sm lg:px-4">
       <div className="flex">
         {/* <a className="btn btn-ghost text-xl normal-case">daisyUI</a> */}
         <div className="mr-1.5 flex lg:hidden">

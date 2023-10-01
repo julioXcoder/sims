@@ -10,7 +10,9 @@ const StudentLayout = async ({ children }: { children: ReactNode }) => {
       <Navbar name={`${firstName} ${lastName}`} />
       <div>
         <Sidebar />
-        <div className="mt-20 h-full lg:ml-52">{children}</div>
+        <div className="mx-auto mt-10 h-full max-w-[85rem] px-4 py-10 sm:px-6 lg:ml-52 lg:px-8 lg:py-14">
+          {children}
+        </div>
       </div>
     </div>
   );

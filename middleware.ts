@@ -13,14 +13,14 @@ export async function middleware(request: NextRequest) {
     const userId = authUser.id.toString();
     const response = NextResponse.next();
 
-    response.headers.set("userDd", userId);
+    response.headers.set("userId", userId);
     return response;
   }
 
   if (request.nextUrl.pathname.startsWith("/auth") && !authUser) return;
 
   if (request.url.includes("/auth") && authUser) {
-    return NextResponse.redirect(new URL("/student", request.url));
+    return NextResponse.redirect(new URL("/student/dashboard", request.url));
   }
 
   if (!authUser) return NextResponse.redirect(new URL("/auth", request.url));
@@ -28,5 +28,5 @@ export async function middleware(request: NextRequest) {
 
 // See "Matching Paths" below to learn more
 export const config = {
-  matcher: ["/student", "/auth", "/api"],
+  matcher: ["/student/:path*", "/auth", "/api"],
 };

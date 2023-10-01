@@ -70,10 +70,18 @@ model AcademicYear {
   semesters Semester[]
 }
 
+model College {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  departments Department[]
+}
+
 model Department {
-  id      Int      @id @default(autoincrement())
-  name    String   @unique
-  courses Course[]
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  collegeId Int
+  college   College  @relation(fields: [collegeId], references: [id])
+  courses   Course[]
 }
 
 model Course {
