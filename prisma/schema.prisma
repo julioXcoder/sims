@@ -15,7 +15,7 @@ model Staff {
   password         String
   firstName        String
   lastName         String
-  roleId           Int               @unique
+  roleId           Int
   role             Role              @relation(fields: [roleId], references: [id])
   subjectInstances SubjectInstance[]
 }
@@ -26,17 +26,16 @@ model Student {
   firstName    String
   lastName     String
   yearId       Int
-  role         String            @default("STUDENT")
   year         Year              @relation(fields: [yearId], references: [id])
+  role         String            @default("STUDENT")
+  studentYears StudentYear[]
   positions    StudentPosition[]
-  CAResults    CAResult[]
-  finalResults FinalResult[]
 }
 
 model Role {
   id    Int      @id @default(autoincrement())
   name  RoleName @unique
-  staff Staff?
+  staff Staff[]
 }
 
 model Position {
@@ -57,7 +56,6 @@ model StudentPosition {
 enum RoleName {
   EXAMINATION_OFFICER
   LECTURE
-  STUDENT
 }
 
 enum PositionName {
@@ -102,12 +100,13 @@ model Level {
 }
 
 model Year {
-  id       Int       @id @default(autoincrement())
-  name     String // This could be "First Year", "Second Year", etc.
-  levelId  Int
-  level    Level     @relation(fields: [levelId], references: [id])
-  students Student[]
-  subjects Subject[]
+  id           Int           @id @default(autoincrement())
+  name         String // This could be "First Year", "Second Year", etc.
+  levelId      Int
+  level        Level         @relation(fields: [levelId], references: [id])
+  students     Student[]
+  studentYears StudentYear[]
+  subjects     Subject[]
 }
 
 model CAComponent {
@@ -122,8 +121,8 @@ model CAComponent {
 model FinalResult {
   id                Int             @id @default(autoincrement())
   marks             Int?
-  studentId         Int
-  student           Student         @relation(fields: [studentId], references: [id])
+  studentYearId     Int
+  studentYear       StudentYear     @relation(fields: [studentYearId], references: [id])
   subjectInstanceId Int
   subjectInstance   SubjectInstance @relation(fields: [subjectInstanceId], references: [id])
 }
@@ -139,8 +138,8 @@ model Semester {
 model CAResult {
   id                Int             @id @default(autoincrement())
   marks             Int?
-  studentId         Int
-  student           Student         @relation(fields: [studentId], references: [id])
+  studentYearId     Int
+  studentYear       StudentYear     @relation(fields: [studentYearId], references: [id])
   componentId       Int
   component         CAComponent     @relation(fields: [componentId], references: [id])
   subjectInstanceId Int
@@ -168,11 +167,23 @@ model SubjectInstance {
   subject      Subject       @relation(fields: [subjectId], references: [id])
   semesterId   Int
   semester     Semester      @relation(fields: [semesterId], references: [id])
-  lectererId   Int
-  lecturer     Staff         @relation(fields: [lectererId], references: [id])
+  lecturerId   Int
+  lecturer     Staff         @relation(fields: [lecturerId], references: [id])
   CAResults    CAResult[]
   finalResults FinalResult[]
   CAs          CA[]
 
   @@unique([subjectId, semesterId])
+}
+
+model StudentYear {
+  id           Int           @id @default(autoincrement())
+  studentId    Int
+  student      Student       @relation(fields: [studentId], references: [id])
+  yearId       Int
+  year         Year          @relation(fields: [yearId], references: [id])
+  CAResults    CAResult[]
+  finalResults FinalResult[]
+
+  @@unique([studentId, yearId])
 }

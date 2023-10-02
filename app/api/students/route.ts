@@ -24,9 +24,9 @@ export async function GET(request: NextRequest) {
         id: verified.id,
       },
       include: {
-        roles: {
+        positions: {
           include: {
-            role: true,
+            position: true,
           },
         },
       },
@@ -38,7 +38,9 @@ export async function GET(request: NextRequest) {
 
     const data = {
       ..._.pick(student, ["id", "firstName", "lastName"]),
-      roles: student.roles.map((studentRole) => studentRole.role.name), // Get role names
+      positions: student.positions.map(
+        (studentPosition) => studentPosition.position.name,
+      ), // Get position names
     };
 
     return NextResponse.json(data, { status: 200 });
@@ -84,15 +86,14 @@ export async function POST(request: NextRequest) {
         lastName,
         password,
         yearId: year.id,
-        roles: {
+        studentYears: {
           create: {
-            role: {
-              connect: {
-                name: "STUDENT",
-              },
-            },
+            yearId: year.id,
           },
         },
+      },
+      include: {
+        studentYears: true,
       },
     });
 

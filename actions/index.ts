@@ -49,187 +49,187 @@ const getStudentData = async () => {
   }
 };
 
-const getStudentResults = async () => {
-  if (!userId) return redirect("/auth");
+// const getStudentResults = async () => {
+//   if (!userId) return redirect("/auth");
 
-  try {
-    const student = await prisma.student.findUnique({
-      where: {
-        id: parseInt(userId),
-      },
-    });
+//   try {
+//     const student = await prisma.student.findUnique({
+//       where: {
+//         id: parseInt(userId),
+//       },
+//     });
 
-    if (!student) throw new Error("Student Not Found");
+//     if (!student) throw new Error("Student Not Found");
 
-    const studentResults = await prisma.student.findUnique({
-      where: {
-        id: student.id,
-      },
-      include: {
-        finalResults: {
-          orderBy: [
-            {
-              subjectInstance: { semester: { academicYear: { year: "asc" } } },
-            },
-            { subjectInstance: { semester: { name: "asc" } } },
-          ],
-          select: {
-            marks: true,
-            subjectInstance: {
-              select: {
-                semester: {
-                  select: {
-                    name: true,
-                    academicYear: {
-                      select: {
-                        year: true,
-                      },
-                    },
-                  },
-                },
-                subject: {
-                  select: {
-                    name: true, // select the subject name
-                  },
-                },
-              },
-            },
-          },
-        },
-        CAResults: {
-          orderBy: [
-            {
-              subjectInstance: { semester: { academicYear: { year: "asc" } } },
-            },
-            { subjectInstance: { semester: { name: "asc" } } },
-          ],
-          select: {
-            marks: true,
-            component: {
-              select: {
-                name: true,
-              },
-            },
-            subjectInstance: {
-              select: {
-                semester: {
-                  select: {
-                    name: true,
-                    academicYear: {
-                      select: {
-                        year: true,
-                      },
-                    },
-                  },
-                },
-                subject: {
-                  select: {
-                    name: true, // select the subject name
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+//     const studentResults = await prisma.student.findUnique({
+//       where: {
+//         id: student.id,
+//       },
+//       include: {
+//         finalResults: {
+//           orderBy: [
+//             {
+//               subjectInstance: { semester: { academicYear: { year: "asc" } } },
+//             },
+//             { subjectInstance: { semester: { name: "asc" } } },
+//           ],
+//           select: {
+//             marks: true,
+//             subjectInstance: {
+//               select: {
+//                 semester: {
+//                   select: {
+//                     name: true,
+//                     academicYear: {
+//                       select: {
+//                         year: true,
+//                       },
+//                     },
+//                   },
+//                 },
+//                 subject: {
+//                   select: {
+//                     name: true, // select the subject name
+//                   },
+//                 },
+//               },
+//             },
+//           },
+//         },
+//         CAResults: {
+//           orderBy: [
+//             {
+//               subjectInstance: { semester: { academicYear: { year: "asc" } } },
+//             },
+//             { subjectInstance: { semester: { name: "asc" } } },
+//           ],
+//           select: {
+//             marks: true,
+//             component: {
+//               select: {
+//                 name: true,
+//               },
+//             },
+//             subjectInstance: {
+//               select: {
+//                 semester: {
+//                   select: {
+//                     name: true,
+//                     academicYear: {
+//                       select: {
+//                         year: true,
+//                       },
+//                     },
+//                   },
+//                 },
+//                 subject: {
+//                   select: {
+//                     name: true, // select the subject name
+//                   },
+//                 },
+//               },
+//             },
+//           },
+//         },
+//       },
+//     });
 
-    if (!studentResults) return {};
+//     if (!studentResults) return {};
 
-    const finalResultsByYearAndSemester = studentResults.finalResults.reduce(
-      (acc: Record<string, any>, finalResult) => {
-        const year = finalResult.subjectInstance.semester.academicYear.year;
-        const semester = finalResult.subjectInstance.semester.name;
-        const subjectName = finalResult.subjectInstance.subject.name;
+//     const finalResultsByYearAndSemester = studentResults.finalResults.reduce(
+//       (acc: Record<string, any>, finalResult) => {
+//         const year = finalResult.subjectInstance.semester.academicYear.year;
+//         const semester = finalResult.subjectInstance.semester.name;
+//         const subjectName = finalResult.subjectInstance.subject.name;
 
-        if (!acc.years) {
-          acc.years = [];
-        }
+//         if (!acc.years) {
+//           acc.years = [];
+//         }
 
-        let yearObj = acc.years.find((y: any) => y.year === year);
-        if (!yearObj) {
-          yearObj = { year, semesters: [] };
-          acc.years.push(yearObj);
-        }
+//         let yearObj = acc.years.find((y: any) => y.year === year);
+//         if (!yearObj) {
+//           yearObj = { year, semesters: [] };
+//           acc.years.push(yearObj);
+//         }
 
-        let semesterObj = yearObj.semesters.find(
-          (s: any) => s.semester === semester,
-        );
-        if (!semesterObj) {
-          semesterObj = { semester, results: {} };
-          yearObj.semesters.push(semesterObj);
-        }
+//         let semesterObj = yearObj.semesters.find(
+//           (s: any) => s.semester === semester,
+//         );
+//         if (!semesterObj) {
+//           semesterObj = { semester, results: {} };
+//           yearObj.semesters.push(semesterObj);
+//         }
 
-        const picked = {
-          marks: finalResult.marks,
-        };
+//         const picked = {
+//           marks: finalResult.marks,
+//         };
 
-        // If the subject does not exist in the results object, add it
-        semesterObj.results[subjectName] = picked;
+//         // If the subject does not exist in the results object, add it
+//         semesterObj.results[subjectName] = picked;
 
-        return acc;
-      },
-      { years: [] },
-    );
+//         return acc;
+//       },
+//       { years: [] },
+//     );
 
-    const CAResultsByYearAndSemester = studentResults.CAResults.reduce(
-      (acc: Record<string, any>, CAResult) => {
-        const year = CAResult.subjectInstance.semester.academicYear.year;
-        const semester = CAResult.subjectInstance.semester.name;
-        const subjectName = CAResult.subjectInstance.subject.name;
+//     const CAResultsByYearAndSemester = studentResults.CAResults.reduce(
+//       (acc: Record<string, any>, CAResult) => {
+//         const year = CAResult.subjectInstance.semester.academicYear.year;
+//         const semester = CAResult.subjectInstance.semester.name;
+//         const subjectName = CAResult.subjectInstance.subject.name;
 
-        if (!acc.years) {
-          acc.years = [];
-        }
+//         if (!acc.years) {
+//           acc.years = [];
+//         }
 
-        let yearObj = acc.years.find((y: any) => y.year === year);
-        if (!yearObj) {
-          yearObj = { year, semesters: [] };
-          acc.years.push(yearObj);
-        }
+//         let yearObj = acc.years.find((y: any) => y.year === year);
+//         if (!yearObj) {
+//           yearObj = { year, semesters: [] };
+//           acc.years.push(yearObj);
+//         }
 
-        let semesterObj = yearObj.semesters.find(
-          (s: any) => s.semester === semester,
-        );
-        if (!semesterObj) {
-          semesterObj = { semester, results: [] };
-          yearObj.semesters.push(semesterObj);
-        }
+//         let semesterObj = yearObj.semesters.find(
+//           (s: any) => s.semester === semester,
+//         );
+//         if (!semesterObj) {
+//           semesterObj = { semester, results: [] };
+//           yearObj.semesters.push(semesterObj);
+//         }
 
-        const picked = {
-          marks: CAResult.marks,
-          name: CAResult.component.name,
-        };
+//         const picked = {
+//           marks: CAResult.marks,
+//           name: CAResult.component.name,
+//         };
 
-        const subjectIndex = semesterObj.results.findIndex(
-          (result: any) => result.subject === subjectName,
-        );
+//         const subjectIndex = semesterObj.results.findIndex(
+//           (result: any) => result.subject === subjectName,
+//         );
 
-        if (subjectIndex === -1) {
-          // If the subject does not exist in the results array, add it
-          semesterObj.results.push({
-            subject: subjectName,
-            results: [picked],
-          });
-        } else {
-          // If the subject exists in the results array, push the new result into it
-          semesterObj.results[subjectIndex].results.push(picked);
-        }
+//         if (subjectIndex === -1) {
+//           // If the subject does not exist in the results array, add it
+//           semesterObj.results.push({
+//             subject: subjectName,
+//             results: [picked],
+//           });
+//         } else {
+//           // If the subject exists in the results array, push the new result into it
+//           semesterObj.results[subjectIndex].results.push(picked);
+//         }
 
-        return acc;
-      },
-      { years: [] },
-    );
+//         return acc;
+//       },
+//       { years: [] },
+//     );
 
-    return {
-      CA: CAResultsByYearAndSemester,
-      finals: finalResultsByYearAndSemester,
-    };
-  } catch (ex) {
-    console.error(ex); // Log the error
-    throw new Error("An error occurred while fetching student data");
-  }
-};
+//     return {
+//       CA: CAResultsByYearAndSemester,
+//       finals: finalResultsByYearAndSemester,
+//     };
+//   } catch (ex) {
+//     console.error(ex); // Log the error
+//     throw new Error("An error occurred while fetching student data");
+//   }
+// };
 
 const getStudentCAResults = async (): Promise<GetStudentCAResultsResponse> => {
   if (!userId) return { error: "Id Not Found" };
@@ -243,9 +243,9 @@ const getStudentCAResults = async (): Promise<GetStudentCAResultsResponse> => {
 
     if (!student) return { error: "Student not found" };
 
-    const studentCAResults = await prisma.student.findUnique({
+    const studentYears = await prisma.studentYear.findMany({
       where: {
-        id: student.id,
+        studentId: student.id,
       },
       include: {
         CAResults: {
@@ -283,16 +283,16 @@ const getStudentCAResults = async (): Promise<GetStudentCAResultsResponse> => {
             },
           },
         },
+        year: true,
       },
     });
 
-    if (!studentCAResults) return { data: { years: [] } };
+    if (!studentYears.length) return { data: { years: [] } };
 
-    const CAResultsByYearAndSemester = studentCAResults.CAResults.reduce(
-      (acc: Record<string, any>, CAResult) => {
-        const year = CAResult.subjectInstance.semester.academicYear.year;
-        const semester = CAResult.subjectInstance.semester.name;
-        const subjectName = CAResult.subjectInstance.subject.name;
+    const CAResultsByYearAndSemester = studentYears.reduce(
+      (acc: Record<string, any>, studentYear) => {
+        const year = studentYear.year.name;
+        const CAResults = studentYear.CAResults;
 
         if (!acc.years) {
           acc.years = [];
@@ -304,33 +304,38 @@ const getStudentCAResults = async (): Promise<GetStudentCAResultsResponse> => {
           acc.years.push(yearObj);
         }
 
-        let semesterObj = yearObj.semesters.find(
-          (s: any) => s.semester === semester,
-        );
-        if (!semesterObj) {
-          semesterObj = { semester, results: [] };
-          yearObj.semesters.push(semesterObj);
-        }
+        CAResults.forEach((CAResult) => {
+          const semester = CAResult.subjectInstance.semester.name;
+          const subjectName = CAResult.subjectInstance.subject.name;
 
-        const picked = {
-          marks: CAResult.marks,
-          name: CAResult.component.name,
-        };
+          let semesterObj = yearObj.semesters.find(
+            (s: any) => s.semester === semester,
+          );
+          if (!semesterObj) {
+            semesterObj = { semester, results: [] };
+            yearObj.semesters.push(semesterObj);
+          }
 
-        const subjectIndex = semesterObj.results.findIndex(
-          (result: any) => result.subject === subjectName,
-        );
+          const picked = {
+            marks: CAResult.marks,
+            name: CAResult.component.name,
+          };
 
-        if (subjectIndex === -1) {
-          // If the subject does not exist in the results array, add it
-          semesterObj.results.push({
-            subject: subjectName,
-            results: [picked],
-          });
-        } else {
-          // If the subject exists in the results array, push the new result into it
-          semesterObj.results[subjectIndex].results.push(picked);
-        }
+          const subjectIndex = semesterObj.results.findIndex(
+            (result: any) => result.subject === subjectName,
+          );
+
+          if (subjectIndex === -1) {
+            // If the subject does not exist in the results array, add it
+            semesterObj.results.push({
+              subject: subjectName,
+              results: [picked],
+            });
+          } else {
+            // If the subject exists in the results array, push the new result into it
+            semesterObj.results[subjectIndex].results.push(picked);
+          }
+        });
 
         return acc;
       },
@@ -357,9 +362,9 @@ const getStudentFinalResults =
 
       if (!student) return { error: "Student Not Found" };
 
-      const studentFinalResults = await prisma.student.findUnique({
+      const studentYears = await prisma.studentYear.findMany({
         where: {
-          id: student.id,
+          studentId: student.id,
         },
         include: {
           finalResults: {
@@ -394,27 +399,30 @@ const getStudentFinalResults =
               },
             },
           },
+          year: true,
         },
       });
 
-      if (!studentFinalResults) return { data: { years: [] } };
+      if (!studentYears.length) return { data: { years: [] } };
 
-      const finalResultsByYearAndSemester =
-        studentFinalResults.finalResults.reduce(
-          (acc: Record<string, any>, finalResult) => {
-            const year = finalResult.subjectInstance.semester.academicYear.year;
+      const finalResultsByYearAndSemester = studentYears.reduce(
+        (acc: Record<string, any>, studentYear) => {
+          const year = studentYear.year.name;
+          const finalResults = studentYear.finalResults;
+
+          if (!acc.years) {
+            acc.years = [];
+          }
+
+          let yearObj = acc.years.find((y: any) => y.year === year);
+          if (!yearObj) {
+            yearObj = { year, semesters: [] };
+            acc.years.push(yearObj);
+          }
+
+          finalResults.forEach((finalResult) => {
             const semester = finalResult.subjectInstance.semester.name;
             const subjectName = finalResult.subjectInstance.subject.name;
-
-            if (!acc.years) {
-              acc.years = [];
-            }
-
-            let yearObj = acc.years.find((y: any) => y.year === year);
-            if (!yearObj) {
-              yearObj = { year, semesters: [] };
-              acc.years.push(yearObj);
-            }
 
             let semesterObj = yearObj.semesters.find(
               (s: any) => s.semester === semester,
@@ -430,11 +438,12 @@ const getStudentFinalResults =
             };
 
             semesterObj.result = picked;
+          });
 
-            return acc;
-          },
-          { years: [] },
-        );
+          return acc;
+        },
+        { years: [] },
+      );
 
       return { data: finalResultsByYearAndSemester as Data<FinalsSemester> };
     } catch (ex) {
@@ -508,7 +517,6 @@ const authorizeStaff = async ({
 
 export {
   getStudentData,
-  getStudentResults,
   getStudentCAResults,
   getStudentFinalResults,
   authorizeStudent,

@@ -32,23 +32,20 @@ export async function POST(request: NextRequest) {
         firstName,
         lastName,
         password,
-        roles: {
-          create: {
-            role: {
-              connect: {
-                name: "LECTURE",
-              },
-            },
-          },
-        },
+        roleId: 2,
       },
+      include: { role: true },
     });
 
     const lecturerData = _.pick(newLecturer, ["id", "firstName", "lastName"]);
 
-    return NextResponse.json(lecturerData, { status: 201 });
+    const data = { ...lecturerData, role: newLecturer.role.name };
+
+    return NextResponse.json(data, { status: 201 });
   } catch (ex) {
     // TODO: Log the console.error();
+
+    console.log(ex);
 
     return NextResponse.json(
       { error: "An error occurred while processing your request" },

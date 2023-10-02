@@ -1,28 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/prisma/client";
-import { departmentSchema } from "@/types/schemas";
+import { collegeSchema } from "@/types/schemas";
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const body = await request.json();
-    const validation = departmentSchema.safeParse(body);
+    const body = await req.json();
+    const validation = collegeSchema.safeParse(body);
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Invalid department Data" },
+        { error: "Invalid college Data" },
         { status: 400 },
       );
     }
 
-    const { name, collegeId } = body;
-    const newDepartment = await prisma.department.create({
+    const { name } = body;
+
+    const newCollege = await prisma.college.create({
       data: {
         name,
-        collegeId,
       },
     });
 
-    return NextResponse.json(newDepartment, { status: 201 });
+    return NextResponse.json(newCollege, { status: 201 });
   } catch (ex) {
     // TODO: Log the console.error();
 

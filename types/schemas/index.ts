@@ -27,8 +27,13 @@ const academicYearSchema = z.object({
   year: z.string().min(4).max(10),
 });
 
+const collegeSchema = z.object({
+  name: z.string().min(3).max(40),
+});
+
 const departmentSchema = z.object({
   name: z.string().min(3).max(40),
+  collegeId: z.number(),
 });
 
 const authSchema = z.object({
@@ -43,4 +48,5 @@ export {
   lecturerSchema,
   departmentSchema,
   authSchema,
+  collegeSchema,
 };

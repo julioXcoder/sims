@@ -27,7 +27,7 @@ export async function POST(
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Invalid Student Role" },
+        { error: "Invalid Student Position" },
         { status: 400 },
       );
     }
@@ -35,9 +35,9 @@ export async function POST(
     const newStudent = await prisma.student.update({
       where: { id: student.id },
       data: {
-        roles: {
+        positions: {
           create: {
-            role: {
+            position: {
               connect: {
                 name: body.role,
               },

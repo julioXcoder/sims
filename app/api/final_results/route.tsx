@@ -22,14 +22,20 @@ export async function POST(request: NextRequest) {
 
     const { marks, studentId, subjectInstanceId } = body;
 
-    const student = await prisma.student.findUnique({
+    const studentYear = await prisma.studentYear.findFirst({
       where: {
-        id: studentId,
+        studentId: studentId,
+      },
+      orderBy: {
+        yearId: "desc",
       },
     });
 
-    if (!student) {
-      return NextResponse.json({ error: "Student Not Found" }, { status: 404 });
+    if (!studentYear) {
+      return NextResponse.json(
+        { error: "Student Year Not Found" },
+        { status: 404 },
+      );
     }
 
     const subjectInstance = await prisma.subjectInstance.findUnique({
@@ -48,7 +54,7 @@ export async function POST(request: NextRequest) {
     const newFinalResult = await prisma.finalResult.create({
       data: {
         marks,
-        studentId: student.id,
+        studentYearId: studentYear.id,
         subjectInstanceId: subjectInstance.id,
       },
     });
