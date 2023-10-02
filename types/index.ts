@@ -60,4 +60,5 @@ export type {
   FinalsSemester,
   CASemester,
   AuthorizeUserResponse,
+  Path,
 };

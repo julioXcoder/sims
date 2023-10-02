@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyAuth } from "./lib";
+import { headers } from "next/headers";
 
 export async function middleware(request: NextRequest) {
   let token = request.cookies.get("token")?.value;

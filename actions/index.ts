@@ -11,13 +11,12 @@ import {
   CASemester,
   AuthorizeUserResponse,
 } from "@/types";
-import _, { includes } from "lodash";
+import _ from "lodash";
 import { createToken } from "@/lib";
 
-const headersList = headers();
-const userId = headersList.get("userId");
-
 const getStudentData = async () => {
+  const headersList = headers();
+  const userId = headersList.get("userId");
   if (!userId) return redirect("/auth");
   try {
     const student = await prisma.student.findUnique({
@@ -50,6 +49,8 @@ const getStudentData = async () => {
 };
 
 const getStudentCAResults = async (): Promise<GetStudentCAResultsResponse> => {
+  const headersList = headers();
+  const userId = headersList.get("userId");
   if (!userId) return { error: "Id Not Found" };
 
   try {
@@ -187,113 +188,10 @@ const getStudentCAResults = async (): Promise<GetStudentCAResultsResponse> => {
   }
 };
 
-// const getStudentFinalResults =
-//   async (): Promise<GetStudentFinalResultsResponse> => {
-//     if (!userId) return { error: "Id Not Found" };
-
-//     try {
-//       const student = await prisma.student.findUnique({
-//         where: {
-//           id: parseInt(userId),
-//         },
-//       });
-
-//       if (!student) return { error: "Student Not Found" };
-
-//       const studentYears = await prisma.studentYear.findMany({
-//         where: {
-//           studentId: student.id,
-//         },
-//         include: {
-//           finalResults: {
-//             orderBy: [
-//               {
-//                 subjectInstance: {
-//                   semester: { academicYear: { year: "asc" } },
-//                 },
-//               },
-//               { subjectInstance: { semester: { name: "asc" } } },
-//             ],
-//             select: {
-//               marks: true,
-//               subjectInstance: {
-//                 select: {
-//                   semester: {
-//                     select: {
-//                       name: true,
-//                       academicYear: {
-//                         select: {
-//                           year: true,
-//                         },
-//                       },
-//                     },
-//                   },
-//                   subject: {
-//                     select: {
-//                       name: true,
-//                     },
-//                   },
-//                 },
-//               },
-//             },
-//           },
-//           year: true,
-//         },
-//       });
-
-//       if (!studentYears.length) return { data: { years: [] } };
-
-//       const finalResultsByYearAndSemester = studentYears.reduce(
-//         (acc: Record<string, any>, studentYear) => {
-//           const year = studentYear.year.name;
-//           const finalResults = studentYear.finalResults;
-
-//           if (!acc.years) {
-//             acc.years = [];
-//           }
-
-//           let yearObj = acc.years.find((y: any) => y.year === year);
-//           if (!yearObj) {
-//             yearObj = { year, semesters: [] };
-//             acc.years.push(yearObj);
-//           }
-
-//           finalResults.forEach((finalResult) => {
-//             const semester = finalResult.subjectInstance.semester.name;
-//             const subjectName = finalResult.subjectInstance.subject.name;
-
-//             let semesterObj = yearObj.semesters.find(
-//               (s: any) => s.semester === semester,
-//             );
-//             if (!semesterObj) {
-//               semesterObj = { semester, result: {} };
-//               yearObj.semesters.push(semesterObj);
-//             }
-
-//             const picked = {
-//               name: subjectName,
-//               marks: finalResult.marks,
-//             };
-
-//             semesterObj.result = picked;
-//           });
-
-//           return acc;
-//         },
-//         { years: [] },
-//       );
-
-//       return { data: finalResultsByYearAndSemester as Data<FinalsSemester> };
-//     } catch (ex) {
-//       console.error(ex);
-//       return {
-//         error: "An error occurred while fetching student final results data",
-//       };
-//     }
-//   };
-
 const getStudentFinalResults =
   async (): Promise<GetStudentFinalResultsResponse> => {
+    const headersList = headers();
+    const userId = headersList.get("userId");
     if (!userId) return { error: "Id Not Found" };
 
     try {

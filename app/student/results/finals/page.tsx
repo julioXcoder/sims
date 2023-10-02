@@ -45,22 +45,26 @@ const FinalsPage = () => {
       <div>
         <div className="mb-4 flex items-center justify-between border-b border-red-500 py-2">
           <div>Students Final Results</div>
-          <div className="form-control">
-            <select
-              className="select select-bordered select-sm"
-              value={selectedYear}
-              onChange={handleChange}
-            >
-              {data.years.map((year, index) => (
-                <option key={index} value={year.year}>
-                  {year.year}
-                </option>
-              ))}
-            </select>
-          </div>
+          {data.years && data.years.length > 0 ? (
+            <div className="form-control">
+              <select
+                className="select select-bordered select-sm"
+                value={selectedYear}
+                onChange={handleChange}
+              >
+                {data.years.map((year, index) => (
+                  <option key={index} value={year.year}>
+                    {year.year}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
         </div>
 
         {yearData &&
+        yearData.studentYears &&
+        yearData.studentYears.length > 0 ? (
           yearData.studentYears.map((studentYear, index) => (
             <div key={index}>
               <h2>{studentYear.year}</h2> {/* Student year heading */}
@@ -101,7 +105,10 @@ const FinalsPage = () => {
                 </div>
               ))}
             </div>
-          ))}
+          ))
+        ) : (
+          <div>No data available</div>
+        )}
       </div>
     );
   }

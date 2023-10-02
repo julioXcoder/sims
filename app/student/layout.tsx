@@ -5,6 +5,7 @@ import { getStudentData } from "@/actions";
 
 const StudentLayout = async ({ children }: { children: ReactNode }) => {
   const { firstName, lastName } = await getStudentData();
+
   return (
     <div className="flex flex-col">
       <Navbar name={`${firstName} ${lastName}`} />
