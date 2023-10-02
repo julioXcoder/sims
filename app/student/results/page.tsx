@@ -14,7 +14,10 @@ const ResultsPage = () => {
       const result = await getStudentCAResults();
       if (result.data) {
         setData(result.data);
-        setSelectedYear(result.data.years[0].year);
+        // Check if result.data.years has at least one element
+        if (result.data.years.length > 0) {
+          setSelectedYear(result.data.years[0].year);
+        }
       } else if (result.error) {
         setError(result.error);
       }
@@ -58,49 +61,57 @@ const ResultsPage = () => {
         </div>
 
         {yearData &&
-          yearData.semesters.map((semester, index) => (
-            <div key={index} className="flex flex-col space-y-2">
-              <div className="collapse bg-gray-50 shadow-md">
-                <input type="checkbox" />
-                <div className="collapse-title text-xl font-medium">
-                  {semester.semester}
-                </div>
-                <div className="collapse-content">
-                  <div className="overflow-x-auto">
-                    {semester.results.map((result, index) => (
-                      <table key={index} className="table">
-                        <thead className="bg-gray-100">
-                          <tr>
-                            <th className="text-xs font-semibold uppercase tracking-wide text-gray-800 ">
-                              subject name
-                            </th>
-                            {result.results.map((res, index) => (
-                              <th
-                                className="text-xs font-semibold uppercase tracking-wide text-gray-800 "
-                                key={index}
-                              >
-                                {res.name}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr>
-                            <td className="text-sm text-gray-600">
-                              {result.subject}
-                            </td>
-                            {result.results.map((res, index) => (
-                              <td className="text-sm text-gray-600" key={index}>
-                                {res.marks}
-                              </td>
-                            ))}
-                          </tr>
-                        </tbody>
-                      </table>
-                    ))}
+          yearData.studentYears.map((studentYear, index) => (
+            <div key={index}>
+              <h2>{studentYear.year}</h2> {/* Student year heading */}
+              {studentYear.semesters.map((semester, index) => (
+                <div key={index} className="flex flex-col space-y-2">
+                  <div className="collapse bg-gray-50 shadow-md">
+                    <input type="checkbox" />
+                    <div className="collapse-title text-xl font-medium">
+                      {semester.semester}
+                    </div>
+                    <div className="collapse-content">
+                      <div className="overflow-x-auto">
+                        {semester.results.map((result, index) => (
+                          <table key={index} className="table">
+                            <thead className="bg-gray-100">
+                              <tr>
+                                <th className="text-xs font-semibold uppercase tracking-wide text-gray-800 ">
+                                  subject name
+                                </th>
+                                {result.results.map((res, index) => (
+                                  <th
+                                    className="text-xs font-semibold uppercase tracking-wide text-gray-800 "
+                                    key={index}
+                                  >
+                                    {res.name}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td className="text-sm text-gray-600">
+                                  {result.subject}
+                                </td>
+                                {result.results.map((res, index) => (
+                                  <td
+                                    className="text-sm text-gray-600"
+                                    key={index}
+                                  >
+                                    {res.marks}
+                                  </td>
+                                ))}
+                              </tr>
+                            </tbody>
+                          </table>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
           ))}
       </div>

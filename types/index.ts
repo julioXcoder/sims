@@ -26,9 +26,14 @@ interface FinalsSemester {
   result: FinalsResult;
 }
 
-interface Year<T> {
+interface StudentYear<T> {
   year: string;
   semesters: T[];
+}
+
+interface Year<T> {
+  year: string;
+  studentYears: StudentYear<T>[];
 }
 
 interface Data<T> {
