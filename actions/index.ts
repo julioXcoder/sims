@@ -231,6 +231,124 @@ const getStudentData = async () => {
 //   }
 // };
 
+// const getStudentCAResults = async (): Promise<GetStudentCAResultsResponse> => {
+//   if (!userId) return { error: "Id Not Found" };
+
+//   try {
+//     const student = await prisma.student.findUnique({
+//       where: {
+//         id: parseInt(userId),
+//       },
+//     });
+
+//     if (!student) return { error: "Student not found" };
+
+//     const studentYears = await prisma.studentYear.findMany({
+//       where: {
+//         studentId: student.id,
+//       },
+//       include: {
+//         CAResults: {
+//           orderBy: [
+//             {
+//               subjectInstance: { semester: { academicYear: { year: "asc" } } },
+//             },
+//             { subjectInstance: { semester: { name: "asc" } } },
+//           ],
+//           select: {
+//             marks: true,
+//             component: {
+//               select: {
+//                 name: true,
+//               },
+//             },
+//             subjectInstance: {
+//               select: {
+//                 semester: {
+//                   select: {
+//                     name: true,
+//                     academicYear: {
+//                       select: {
+//                         year: true,
+//                       },
+//                     },
+//                   },
+//                 },
+//                 subject: {
+//                   select: {
+//                     name: true,
+//                   },
+//                 },
+//               },
+//             },
+//           },
+//         },
+//         year: true,
+//       },
+//     });
+
+//     if (!studentYears.length) return { data: { years: [] } };
+
+//     const CAResultsByYearAndSemester = studentYears.reduce(
+//       (acc: Record<string, any>, studentYear) => {
+//         const year = studentYear.year.name;
+//         const CAResults = studentYear.CAResults;
+
+//         if (!acc.years) {
+//           acc.years = [];
+//         }
+
+//         let yearObj = acc.years.find((y: any) => y.year === year);
+//         if (!yearObj) {
+//           yearObj = { year, semesters: [] };
+//           acc.years.push(yearObj);
+//         }
+
+//         CAResults.forEach((CAResult) => {
+//           const semester = CAResult.subjectInstance.semester.name;
+//           const subjectName = CAResult.subjectInstance.subject.name;
+
+//           let semesterObj = yearObj.semesters.find(
+//             (s: any) => s.semester === semester,
+//           );
+//           if (!semesterObj) {
+//             semesterObj = { semester, results: [] };
+//             yearObj.semesters.push(semesterObj);
+//           }
+
+//           const picked = {
+//             marks: CAResult.marks,
+//             name: CAResult.component.name,
+//           };
+
+//           const subjectIndex = semesterObj.results.findIndex(
+//             (result: any) => result.subject === subjectName,
+//           );
+
+//           if (subjectIndex === -1) {
+//             // If the subject does not exist in the results array, add it
+//             semesterObj.results.push({
+//               subject: subjectName,
+//               results: [picked],
+//             });
+//           } else {
+//             // If the subject exists in the results array, push the new result into it
+//             semesterObj.results[subjectIndex].results.push(picked);
+//           }
+//         });
+
+//         return acc;
+//       },
+//       { years: [] },
+//     );
+
+//     return { data: CAResultsByYearAndSemester as Data<CASemester> };
+//   } catch (ex) {
+//     console.error(ex);
+//     return { error: "An error occurred while fetching student CA data" };
+//   }
+// };
+
 const getStudentCAResults = async (): Promise<GetStudentCAResultsResponse> => {
   if (!userId) return { error: "Id Not Found" };
 

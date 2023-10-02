@@ -13,22 +13,22 @@ export async function middleware(request: NextRequest) {
 
     response.headers.set("userId", userId);
 
-    if (authUser.role === "STUDENT") {
-      return NextResponse.redirect(new URL("/student/dashboard", request.url));
-    } else if (authUser.role === "STAFF") {
-      return NextResponse.redirect(new URL("/staff/dashboard", request.url));
-    } else if (authUser.role === "STAFF") {
-      return NextResponse.redirect(new URL("/staff/dashboard", request.url));
+    if (authUser && request.url.includes("/auth")) {
+      if (authUser.role === "STUDENT") {
+        return NextResponse.redirect(
+          new URL("/student/dashboard", request.url),
+        );
+      } else if (authUser.role === "STAFF") {
+        return NextResponse.redirect(new URL("/staff/dashboard", request.url));
+      } else if (authUser.role === "STAFF") {
+        return NextResponse.redirect(new URL("/staff/dashboard", request.url));
+      }
     }
 
     return response;
   }
 
   if (request.nextUrl.pathname.startsWith("/auth") && !authUser) return;
-
-  if (request.url.includes("/auth") && authUser) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
 
   if (!authUser) return NextResponse.redirect(new URL("/auth", request.url));
 }
