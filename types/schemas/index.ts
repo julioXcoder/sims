@@ -31,10 +31,16 @@ const departmentSchema = z.object({
   name: z.string().min(3).max(40),
 });
 
+const authSchema = z.object({
+  username: z.string(),
+  password: z.string().min(3),
+});
+
 export {
   studentSchema,
   studentRoleSchema,
   academicYearSchema,
   lecturerSchema,
   departmentSchema,
+  authSchema,
 };

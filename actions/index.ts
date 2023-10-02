@@ -1,6 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import prisma from "@/prisma/client";
 import {
@@ -9,8 +9,10 @@ import {
   GetStudentFinalResultsResponse,
   FinalsSemester,
   CASemester,
+  AuthorizeUserResponse,
 } from "@/types";
-import _ from "lodash";
+import _, { includes } from "lodash";
+import { createToken } from "@/lib";
 
 const headersList = headers();
 const userId = headersList.get("userId");
@@ -23,9 +25,9 @@ const getStudentData = async () => {
         id: parseInt(userId),
       },
       include: {
-        roles: {
+        positions: {
           include: {
-            role: true,
+            position: true,
           },
         },
       },
@@ -35,7 +37,9 @@ const getStudentData = async () => {
 
     const data = {
       ..._.pick(student, ["id", "firstName", "lastName"]),
-      roles: student.roles.map((studentRole) => studentRole.role.name),
+      roles: student.positions.map(
+        (studentPosition) => studentPosition.position.name,
+      ),
     };
 
     return data;
@@ -441,9 +445,71 @@ const getStudentFinalResults =
     }
   };
 
+const authorizeStudent = async ({
+  username,
+  password,
+}: {
+  username: string;
+  password: string;
+}): Promise<AuthorizeUserResponse> => {
+  const student = await prisma.student.findUnique({
+    where: {
+      id: parseInt(username),
+    },
+  });
+
+  if (!student || student.password != password) {
+    return { error: "Invalid username or password" };
+  }
+
+  const data = _.pick(student, ["id", "role"]);
+
+  const token = await createToken(data);
+
+  cookies().set("token", token);
+
+  return { redirect: "/student/dashboard" };
+};
+
+const authorizeStaff = async ({
+  username,
+  password,
+}: {
+  username: string;
+  password: string;
+}): Promise<AuthorizeUserResponse> => {
+  const staff = await prisma.staff.findUnique({
+    where: {
+      id: parseInt(username),
+    },
+    include: { role: true },
+  });
+
+  if (!staff || staff.password != password) {
+    return { error: "Invalid username or password" };
+  }
+
+  const role = staff.role.name;
+
+  const data = { id: staff.id, role };
+
+  const token = await createToken(data);
+
+  cookies().set("token", token);
+
+  if (role == "LECTURE") {
+    return { redirect: "/lecture/dashboard" };
+  } else if (role == "EXAMINATION_OFFICER") {
+    return { redirect: "/examination_officer/dashboard" };
+  }
+
+  return { error: "Invalid user role" };
+};
+
 export {
   getStudentData,
   getStudentResults,
   getStudentCAResults,
   getStudentFinalResults,
+  authorizeStudent,
 };

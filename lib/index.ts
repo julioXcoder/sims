@@ -57,7 +57,7 @@ const verifyAuth = async (token: string) => {
       token,
       new TextEncoder().encode(getJwtSecretKey()),
     );
-    return verified.payload as { id: number };
+    return verified.payload as { id: number; role: string };
   } catch (ex) {
     throw new Error("Error occurred while trying to verifying the token.");
   }

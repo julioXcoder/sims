@@ -40,6 +40,11 @@ interface GetStudentResultsResponse<T> {
   error?: string;
 }
 
+interface AuthorizeUserResponse {
+  redirect?: string;
+  error?: string;
+}
+
 type GetStudentCAResultsResponse = GetStudentResultsResponse<CASemester>;
 type GetStudentFinalResultsResponse = GetStudentResultsResponse<FinalsSemester>;
 
@@ -49,4 +54,5 @@ export type {
   GetStudentFinalResultsResponse,
   FinalsSemester,
   CASemester,
+  AuthorizeUserResponse,
 };

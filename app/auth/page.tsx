@@ -7,6 +7,7 @@ import logo from "@/public/logo.png";
 import z from "zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { authorizeStudent } from "@/actions";
 
 const schema = z.object({
   username: z.string(),
@@ -29,33 +30,16 @@ const AuthPage = () => {
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
-    try {
-      const response = await fetch("/api/auth", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+    const { redirect, error } = await authorizeStudent(data);
 
-      const responseData = await response.json();
-
-      if (responseData.redirect) {
-        router.push(responseData.redirect);
-        return;
-      } else if (responseData.error) {
-        setError(responseData.error);
-      }
-
-      // handle the response data here
-    } catch (error) {
-      console.error(
-        "There has been a problem with your fetch operation: ",
-        error,
-      );
-    } finally {
-      setIsLoading(false);
+    if (redirect) {
+      router.push(redirect);
+      return;
+    } else if (error) {
+      setError(error);
     }
+
+    setIsLoading(false);
   };
 
   return (

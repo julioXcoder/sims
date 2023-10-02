@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyAuth } from "./lib";
-import { headers } from "next/headers";
 
-// This function can be marked `async` if using `await` inside
 export async function middleware(request: NextRequest) {
   let token = request.cookies.get("token")?.value;
   const authUser =
@@ -14,13 +12,22 @@ export async function middleware(request: NextRequest) {
     const response = NextResponse.next();
 
     response.headers.set("userId", userId);
+
+    if (authUser.role === "STUDENT") {
+      return NextResponse.redirect(new URL("/student/dashboard", request.url));
+    } else if (authUser.role === "STAFF") {
+      return NextResponse.redirect(new URL("/staff/dashboard", request.url));
+    } else if (authUser.role === "STAFF") {
+      return NextResponse.redirect(new URL("/staff/dashboard", request.url));
+    }
+
     return response;
   }
 
   if (request.nextUrl.pathname.startsWith("/auth") && !authUser) return;
 
   if (request.url.includes("/auth") && authUser) {
-    return NextResponse.redirect(new URL("/student/dashboard", request.url));
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   if (!authUser) return NextResponse.redirect(new URL("/auth", request.url));
@@ -28,5 +35,5 @@ export async function middleware(request: NextRequest) {
 
 // See "Matching Paths" below to learn more
 export const config = {
-  matcher: ["/student/:path*", "/auth", "/api"],
+  matcher: ["/student/:path*", "/auth"],
 };

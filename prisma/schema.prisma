@@ -15,51 +15,52 @@ model Staff {
   password         String
   firstName        String
   lastName         String
-  roles            StaffRole[]
+  roleId           Int               @unique
+  role             Role              @relation(fields: [roleId], references: [id])
   subjectInstances SubjectInstance[]
 }
 
 model Student {
-  id           Int           @id @default(autoincrement())
+  id           Int               @id @default(autoincrement())
   password     String
   firstName    String
   lastName     String
   yearId       Int
-  year         Year          @relation(fields: [yearId], references: [id])
-  roles        StudentRole[]
+  role         String            @default("STUDENT")
+  year         Year              @relation(fields: [yearId], references: [id])
+  positions    StudentPosition[]
   CAResults    CAResult[]
   finalResults FinalResult[]
 }
 
 model Role {
-  id       Int           @id @default(autoincrement())
-  name     RoleName      @unique
-  staff    StaffRole[]
-  students StudentRole[]
+  id    Int      @id @default(autoincrement())
+  name  RoleName @unique
+  staff Staff?
 }
 
-model StaffRole {
-  staffId Int
-  roleId  Int
-  staff   Staff @relation(fields: [staffId], references: [id])
-  role    Role  @relation(fields: [roleId], references: [id])
-
-  @@id([staffId, roleId])
+model Position {
+  id       Int               @id @default(autoincrement())
+  name     PositionName      @unique
+  students StudentPosition[]
 }
 
-model StudentRole {
-  studentId Int
-  roleId    Int
-  student   Student @relation(fields: [studentId], references: [id])
-  role      Role    @relation(fields: [roleId], references: [id])
+model StudentPosition {
+  studentId  Int
+  positionId Int
+  student    Student  @relation(fields: [studentId], references: [id])
+  position   Position @relation(fields: [positionId], references: [id])
 
-  @@id([studentId, roleId])
+  @@id([studentId, positionId])
 }
 
 enum RoleName {
   EXAMINATION_OFFICER
   LECTURE
   STUDENT
+}
+
+enum PositionName {
   STUDENT_PRESIDENT
   CLASS_REPRESENTATIVE
 }
@@ -167,8 +168,8 @@ model SubjectInstance {
   subject      Subject       @relation(fields: [subjectId], references: [id])
   semesterId   Int
   semester     Semester      @relation(fields: [semesterId], references: [id])
-  lecturerId   Int
-  lecturer     Staff         @relation(fields: [lecturerId], references: [id])
+  lectererId   Int
+  lecturer     Staff         @relation(fields: [lectererId], references: [id])
   CAResults    CAResult[]
   finalResults FinalResult[]
   CAs          CA[]
