@@ -21,6 +21,37 @@ interface CASemester {
   results: Result[];
 }
 
+interface CAComponentInput {
+  name: string;
+  marks: number;
+}
+
+interface CreateCAComponentsResponse {
+  data?: CAComponentInfo[];
+  error?: string;
+}
+
+interface CAComponentInfo {
+  name: string;
+  marks: number;
+}
+
+interface SubjectInfo {
+  college: string;
+  department: string;
+  course: string;
+  level: string;
+  year: string;
+  name: string;
+  id: number;
+  caComponents: CAComponentInfo[];
+}
+
+interface GetSubjectsResponse {
+  data?: SubjectInfo[];
+  error?: string;
+}
+
 interface FinalsSemester {
   semester: string;
   result: FinalsResult;
@@ -61,4 +92,8 @@ export type {
   CASemester,
   AuthorizeUserResponse,
   Path,
+  GetSubjectsResponse,
+  SubjectInfo,
+  CAComponentInput,
+  CreateCAComponentsResponse,
 };

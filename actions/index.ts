@@ -10,6 +10,10 @@ import {
   FinalsSemester,
   CASemester,
   AuthorizeUserResponse,
+  GetSubjectsResponse,
+  SubjectInfo,
+  CreateCAComponentsResponse,
+  CAComponentInput,
 } from "@/types";
 import _ from "lodash";
 import { createToken } from "@/lib";
@@ -378,9 +382,145 @@ const authorizeStaff = async ({
   return { error: "Invalid user role" };
 };
 
+// FIXME: Add return errors for getSubjects and createCAComponents
+
+// without components
+// TODO: lecturerId: 6,  semesterId: 2,
+
+async function getSubjects(): Promise<GetSubjectsResponse> {
+  try {
+    const currentSemester = await prisma.semester.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 1,
+    });
+
+    if (!currentSemester) {
+      return { error: "No Semester found" };
+    }
+
+    const semester = currentSemester[0];
+
+    const subjects = await prisma.subjectInstance.findMany({
+      where: {
+        lecturerId: 6,
+        semesterId: 2,
+      },
+      include: {
+        subject: {
+          include: {
+            year: {
+              include: {
+                level: {
+                  include: {
+                    course: {
+                      include: {
+                        department: {
+                          include: {
+                            college: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        CAs: {
+          include: {
+            components: true,
+          },
+        },
+      },
+    });
+
+    const subjectInfos: SubjectInfo[] = subjects.map((subjectInstance) => ({
+      college:
+        subjectInstance.subject.year.level.course.department.college.name,
+      department: subjectInstance.subject.year.level.course.department.name,
+      course: subjectInstance.subject.year.level.course.name,
+      level: subjectInstance.subject.year.level.name,
+      year: subjectInstance.subject.year.name,
+      name: subjectInstance.subject.name,
+      id: subjectInstance.id,
+      caComponents: subjectInstance.CAs.flatMap((ca) =>
+        ca.components.map((component) => ({
+          name: component.name,
+          marks: component.marks,
+        })),
+      ),
+    }));
+
+    return { data: subjectInfos };
+  } catch (error) {
+    return { error: "" };
+  }
+}
+
+async function createCAComponents(
+  caId: number,
+  lecturerId: number,
+  subjectInstanceId: number,
+  components: CAComponentInput[],
+): Promise<CreateCAComponentsResponse> {
+  try {
+    const subjectInstance = await prisma.subjectInstance.findUnique({
+      where: {
+        id: subjectInstanceId,
+      },
+      include: {},
+    });
+
+    if (!subjectInstance) {
+      return { error: "Subject Instance Not Found" };
+    }
+
+    if (subjectInstance.lecturerId !== lecturerId) {
+      return {
+        error: "You are not authorized to create a CA for this subject",
+      };
+    }
+
+    const newCA = await prisma.cA.create({
+      data: {
+        subjectInstanceId: subjectInstance.id,
+      },
+    });
+
+    const createdComponents: CAComponent[] =
+      await prisma.cAComponent.createMany({
+        data: components.map((component) => ({
+          ...component,
+          CAId: newCA.id,
+        })),
+      });
+
+    for (const component of createdComponents) {
+      for (const student of subjectInstance.students) {
+        await prisma.cAResult.create({
+          data: {
+            marks: null,
+            studentYearId: student.id, // Replace with the actual student year ID
+            componentId: component.id,
+            subjectInstanceId: subjectInstance.id,
+          },
+        });
+      }
+    }
+
+    return { data: createdComponents };
+  } catch (error) {
+    return { error: "" };
+  }
+}
+
 export {
   getStudentData,
   getStudentCAResults,
   getStudentFinalResults,
   authorizeStudent,
+  getSubjects,
 };
