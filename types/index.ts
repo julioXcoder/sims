@@ -7,18 +7,34 @@ interface Path {
 }
 
 interface Result {
+  name: string;
+  marks: number | null;
+}
+
+interface StudentResults {
+  id: number;
+  password: string;
+  firstName: string;
+  lastName: string;
+  yearId: number;
+  role: string;
+  caResults: Result[];
+  finalResults: Result[];
+}
+
+interface SubjectResult {
   subject: string;
-  results: { marks: number; name: string }[];
+  results: Result[];
 }
 
 interface FinalsResult {
   name: string;
-  marks: number;
+  marks: number | null;
 }
 
 interface CASemester {
   semester: string;
-  results: Result[];
+  results: SubjectResult[];
 }
 
 interface CAComponentInput {
@@ -81,6 +97,11 @@ interface AuthorizeUserResponse {
   error?: string;
 }
 
+interface GetStudentsForSubjectInstanceResponse {
+  data?: StudentResults[];
+  error?: string;
+}
+
 type GetStudentCAResultsResponse = GetStudentResultsResponse<CASemester>;
 type GetStudentFinalResultsResponse = GetStudentResultsResponse<FinalsSemester>;
 
@@ -96,4 +117,5 @@ export type {
   SubjectInfo,
   CAComponentInput,
   CreateCAComponentsResponse,
+  GetStudentsForSubjectInstanceResponse,
 };

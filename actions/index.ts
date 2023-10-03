@@ -382,7 +382,7 @@ const authorizeStaff = async ({
   return { error: "Invalid user role" };
 };
 
-// FIXME: Add return errors for getSubjects and createCAComponents
+// FIXME: Add return errors for getSubjects and createCAComponents and getStudentsForSubjectInstance
 
 // without components
 // TODO: lecturerId: 6,  semesterId: 2,
@@ -460,6 +460,74 @@ async function getSubjects(): Promise<GetSubjectsResponse> {
   }
 }
 
+// async function createCAComponents(
+//   caId: number,
+//   lecturerId: number,
+//   subjectInstanceId: number,
+//   components: CAComponentInput[],
+// ): Promise<CreateCAComponentsResponse> {
+//   try {
+//     const subjectInstance = await prisma.subjectInstance.findUnique({
+//       where: {
+//         id: subjectInstanceId,
+//       },
+//       include: {
+//         studentYears: {
+//           include: {
+//             student: true,
+//           },
+//         },
+//       },
+//     });
+
+//     if (!subjectInstance) {
+//       return { error: "Subject Instance Not Found" };
+//     }
+
+//     if (subjectInstance.lecturerId !== lecturerId) {
+//       return {
+//         error: "You are not authorized to create a CA for this subject",
+//       };
+//     }
+
+//     const newCA = await prisma.cA.create({
+//       data: {
+//         subjectInstanceId: subjectInstance.id,
+//       },
+//     });
+
+//     const createdComponentsCount = await prisma.cAComponent.createMany({
+//       data: components.map((component) => ({
+//         ...component,
+//         CAId: newCA.id,
+//       })),
+//     });
+
+//     const createdComponents = await prisma.cAComponent.findMany({
+//       where: {
+//         CAId: newCA.id,
+//       },
+//     });
+
+//     for (const component of createdComponents) {
+//       for (const student of subjectInstance.students) {
+//         await prisma.cAResult.create({
+//           data: {
+//             marks: null,
+//             studentYearId: student.id, // Replace with the actual student year ID
+//             componentId: component.id,
+//             subjectInstanceId: subjectInstance.id,
+//           },
+//         });
+//       }
+//     }
+
+//     return { data: createdComponents };
+//   } catch (error) {
+//     return { error: "" };
+//   }
+// }
+
 async function createCAComponents(
   caId: number,
   lecturerId: number,
@@ -467,45 +535,50 @@ async function createCAComponents(
   components: CAComponentInput[],
 ): Promise<CreateCAComponentsResponse> {
   try {
-    const subjectInstance = await prisma.subjectInstance.findUnique({
+    const carResults = await prisma.cAResult.findMany({
       where: {
-        id: subjectInstanceId,
+        subjectInstanceId: subjectInstanceId,
       },
-      include: {},
+      include: {
+        studentYear: {
+          include: {
+            student: true,
+          },
+        },
+      },
     });
 
-    if (!subjectInstance) {
-      return { error: "Subject Instance Not Found" };
-    }
-
-    if (subjectInstance.lecturerId !== lecturerId) {
-      return {
-        error: "You are not authorized to create a CA for this subject",
-      };
+    if (!carResults) {
+      return { error: "No CAResults Found for this Subject Instance" };
     }
 
     const newCA = await prisma.cA.create({
       data: {
-        subjectInstanceId: subjectInstance.id,
+        subjectInstanceId: subjectInstanceId,
       },
     });
 
-    const createdComponents: CAComponent[] =
-      await prisma.cAComponent.createMany({
-        data: components.map((component) => ({
-          ...component,
-          CAId: newCA.id,
-        })),
-      });
+    const createdComponentsCount = await prisma.cAComponent.createMany({
+      data: components.map((component) => ({
+        ...component,
+        CAId: newCA.id,
+      })),
+    });
+
+    const createdComponents = await prisma.cAComponent.findMany({
+      where: {
+        CAId: newCA.id,
+      },
+    });
 
     for (const component of createdComponents) {
-      for (const student of subjectInstance.students) {
+      for (const carResult of carResults) {
         await prisma.cAResult.create({
           data: {
             marks: null,
-            studentYearId: student.id, // Replace with the actual student year ID
+            studentYearId: carResult.studentYearId,
             componentId: component.id,
-            subjectInstanceId: subjectInstance.id,
+            subjectInstanceId: subjectInstanceId,
           },
         });
       }
@@ -517,10 +590,75 @@ async function createCAComponents(
   }
 }
 
+async function getStudentsForSubjectInstance(subjectInstanceId: number) {
+  try {
+    const caResults = await prisma.cAResult.findMany({
+      where: {
+        subjectInstanceId: subjectInstanceId,
+      },
+      include: {
+        studentYear: {
+          include: {
+            student: true,
+          },
+        },
+        component: true,
+      },
+    });
+
+    const finalResults = await prisma.finalResult.findMany({
+      where: {
+        subjectInstanceId: subjectInstanceId,
+      },
+      include: {
+        studentYear: {
+          include: {
+            student: true,
+          },
+        },
+        subjectInstance: {
+          include: {
+            subject: true,
+          },
+        },
+      },
+    });
+
+    if (!caResults || !finalResults) {
+      return { error: "No Results Found for this Subject Instance" };
+    }
+
+    // Extract the students from the CAResults and FinalResults
+    const students = caResults.map((carResult) => ({
+      ...carResult.studentYear.student,
+      caResults: [
+        {
+          name: carResult.component.name,
+          marks: carResult.marks,
+        },
+      ],
+      finalResults: finalResults
+        .filter(
+          (finalResult) =>
+            finalResult.studentYearId === carResult.studentYearId,
+        )
+        .map((finalResult) => ({
+          name: finalResult.subjectInstance.subject.name,
+          marks: finalResult.marks,
+        })),
+    }));
+
+    return { data: students };
+  } catch (error) {
+    return { error: "" };
+  }
+}
+
 export {
   getStudentData,
   getStudentCAResults,
   getStudentFinalResults,
   authorizeStudent,
   getSubjects,
+  getStudentsForSubjectInstance,
 };
