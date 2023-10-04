@@ -1,5 +1,6 @@
 import React, { ReactNode } from "react";
-import { Sidebar, Navbar } from "@/components";
+import Sidebar from "../sidebar";
+import Navbar from "../navbar";
 
 const LecturerLayout = async ({ children }: { children: ReactNode }) => {
   return (

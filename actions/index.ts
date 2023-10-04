@@ -18,8 +18,11 @@ import {
   StudentCAResults,
   GetStudentsForSubjectInstanceFinalResponse,
   StudentFinalResults,
+  GetStudentDataResponse,
+  StudentData,
+  GetStaffDataResponse,
 } from "@/types";
-import _ from "lodash";
+import _, { result } from "lodash";
 import { createToken } from "@/lib";
 
 const getUserId = () => {
@@ -27,16 +30,18 @@ const getUserId = () => {
 
   const userId = headersList.get("userId");
 
-  return userId;
+  if (!userId) return redirect("/error");
+
+  return parseInt(userId);
 };
 
-const getStudentData = async () => {
+const getStudentData = async (): Promise<GetStudentDataResponse> => {
   const userId = getUserId();
-  if (!userId) return redirect("/auth");
+
   try {
     const student = await prisma.student.findUnique({
       where: {
-        id: parseInt(userId),
+        id: userId,
       },
       include: {
         positions: {
@@ -47,30 +52,50 @@ const getStudentData = async () => {
       },
     });
 
-    if (!student) throw new Error("Student not found");
+    if (!student) return { error: "Student not found" };
 
-    const data = {
+    const data: StudentData = {
       ..._.pick(student, ["id", "firstName", "lastName"]),
-      roles: student.positions.map(
+      positions: student.positions.map(
         (studentPosition) => studentPosition.position.name,
       ),
     };
 
-    return data;
+    return { data };
   } catch (ex) {
-    console.error(ex); // Log the error
-    throw new Error("An error occurred while fetching student data");
+    return { error: "An error occurred while fetching student data" };
+  }
+};
+
+const getStaffData = async (): Promise<GetStaffDataResponse> => {
+  const userId = getUserId();
+  try {
+    const staff = await prisma.staff.findUnique({
+      where: { id: userId },
+      include: {
+        role: true,
+      },
+    });
+
+    if (!staff) return { error: "Student not found" };
+
+    const { id, firstName, lastName, role } = staff;
+
+    const data = { id, firstName, lastName, role: role.name };
+
+    return { data };
+  } catch (ex) {
+    return { error: "An error occurred while fetching staff data" };
   }
 };
 
 const getStudentCAResults = async (): Promise<GetStudentCAResultsResponse> => {
   const userId = getUserId();
-  if (!userId) return { error: "Id Not Found" };
 
   try {
     const student = await prisma.student.findUnique({
       where: {
-        id: parseInt(userId),
+        id: userId,
       },
     });
 
@@ -210,7 +235,7 @@ const getStudentFinalResults =
     try {
       const student = await prisma.student.findUnique({
         where: {
-          id: parseInt(userId),
+          id: getUserId(),
         },
       });
 
@@ -383,9 +408,9 @@ const authorizeStaff = async ({
   cookies().set("token", token);
 
   if (role == "LECTURE") {
-    return { redirect: "/lecture/dashboard" };
+    return { redirect: "/staff/lecturer/dashboard" };
   } else if (role == "EXAMINATION_OFFICER") {
-    return { redirect: "/examination_officer/dashboard" };
+    return { redirect: "/staff/examination_officer/dashboard" };
   }
 
   return { error: "Invalid user role" };
@@ -397,6 +422,7 @@ const authorizeStaff = async ({
 // TODO: lecturerId: 6,  semesterId: 2,
 
 async function getSubjects(): Promise<GetSubjectsResponse> {
+  const userId = getUserId();
   try {
     const currentSemester = await prisma.semester.findMany({
       orderBy: {
@@ -413,8 +439,8 @@ async function getSubjects(): Promise<GetSubjectsResponse> {
 
     const subjects = await prisma.subjectInstance.findMany({
       where: {
-        lecturerId: 6,
-        semesterId: 2,
+        lecturerId: userId,
+        semesterId: semester.id,
       },
       include: {
         subject: {
@@ -732,4 +758,6 @@ export {
   getStudentsForSubjectInstance,
   getStudentsForSubjectInstanceCAResults,
   getStudentsForSubjectInstanceFinalResults,
+  getStaffData,
+  authorizeStaff,
 };

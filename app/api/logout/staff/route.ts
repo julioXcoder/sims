@@ -6,5 +6,5 @@ import { cookies } from "next/headers";
 export function GET(request: NextRequest) {
   cookies().set("token", "");
 
-  return redirect("/student/auth");
+  return redirect("/staff/auth");
 }

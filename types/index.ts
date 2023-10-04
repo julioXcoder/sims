@@ -23,10 +23,21 @@ interface FinalsResult {
 
 interface Student {
   id: number;
-  password: string;
   firstName: string;
   lastName: string;
-  yearId: number;
+}
+
+interface StudentData {
+  id: number;
+  firstName: string;
+  lastName: string;
+  positions: string[];
+}
+
+interface StaffData {
+  id: number;
+  firstName: string;
+  lastName: string;
   role: string;
 }
 
@@ -123,6 +134,16 @@ interface GetStudentsForSubjectInstanceFinalResponse {
   error?: string;
 }
 
+interface GetStudentDataResponse {
+  data?: StudentData;
+  error?: string;
+}
+
+interface GetStaffDataResponse {
+  data?: StaffData;
+  error?: string;
+}
+
 // interface GetStudentsForSubjectInstanceResponse {
 //   data?: StudentResults[];
 //   error?: string;
@@ -147,4 +168,8 @@ export type {
   GetStudentsForSubjectInstanceFinalResponse,
   StudentCAResults,
   StudentFinalResults,
+  GetStudentDataResponse,
+  StudentData,
+  GetStaffDataResponse,
+  StaffData,
 };

@@ -1,11 +1,6 @@
 import React from "react";
 
-import {
-  getSubjects,
-  getStudentsForSubjectInstance,
-  getStudentsForSubjectInstanceFinalResults,
-  getStudentsForSubjectInstanceCAResults,
-} from "@/actions";
+import { getSubjects, getStudentsForSubjectInstanceCAResults } from "@/actions";
 
 const DashboardPage = async () => {
   const { data, error } = await getSubjects();

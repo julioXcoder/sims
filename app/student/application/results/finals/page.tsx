@@ -35,7 +35,16 @@ const FinalsPage = () => {
   }
 
   if (!data) {
-    return <span className="loading loading-dots loading-md"></span>;
+    return (
+      <div className="animate-pulse">
+        <div className="mb-4 flex items-center justify-between border-b border-red-500 py-2">
+          <div>Students Final Results</div>
+        </div>
+        <div>Retrieving Data</div>
+        <div className="mt-2 flex h-16 w-full items-center justify-center rounded-lg bg-gray-50 p-2 shadow-md"></div>
+        <div className="mt-2 flex h-16 w-full items-center justify-center rounded-lg bg-gray-50 p-2 shadow-md"></div>
+      </div>
+    );
   }
 
   const yearData = data.years.find((year) => year.year === selectedYear);

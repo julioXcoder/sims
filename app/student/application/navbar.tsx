@@ -3,12 +3,10 @@ import React from "react";
 import gon from "@/public/gon.png";
 import logo from "@/public/logo.png";
 import Image from "next/image";
+import { getStudentData } from "@/actions";
 
-interface Props {
-  name: string;
-}
-
-const Navbar = ({ name }: Props) => {
+const Navbar = async () => {
+  const { data, error } = await getStudentData();
   return (
     <div className="navbar fixed top-0 z-10 flex justify-between bg-base-100 shadow-sm lg:px-4">
       <div className="flex">
@@ -110,7 +108,9 @@ const Navbar = ({ name }: Props) => {
           >
             <div className="-mx-2 -mt-2 mb-2 rounded-t-lg bg-gray-100 px-4 py-2">
               <p className="text-sm text-gray-500">Signed in as</p>
-              <p className="text-sm font-medium text-gray-800">{name}</p>
+              <p className="text-sm font-medium text-gray-800">
+                {data && `${data.firstName} ${data.lastName}`}
+              </p>
             </div>
             <li>
               <a className="justify-between">
@@ -122,7 +122,7 @@ const Navbar = ({ name }: Props) => {
               <a>Settings</a>
             </li>
             <li>
-              <a href="/api/auth/logout">logout</a>
+              <a href="/api/logout/student">logout</a>
             </li>
           </ul>
         </div>

@@ -9,12 +9,6 @@ interface RoleRoutes {
   EXAMINATION_OFFICER: string[];
 }
 
-const roleRoutes: RoleRoutes = {
-  LECTURER: ["/staff/lecturer"],
-  STUDENT: ["/student"],
-  EXAMINATION_OFFICER: ["/staff/eo"],
-};
-
 export async function middleware(request: NextRequest) {
   let token = request.cookies.get("token")?.value;
   const authUser =
@@ -23,6 +17,7 @@ export async function middleware(request: NextRequest) {
   if (authUser) {
     const userId = authUser.id.toString();
     const response = NextResponse.next();
+    console.log("role", authUser.role);
 
     response.headers.set("userId", userId);
 
@@ -36,7 +31,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(
           new URL("/student/application/dashboard", request.url),
         );
-      } else if (authUser.role === "LECTURER") {
+      } else if (authUser.role === "LECTURE") {
         return NextResponse.redirect(new URL("/staff/LECTURER", request.url));
       } else if (authUser.role === "EO") {
         return NextResponse.redirect(new URL("/staff/EO", request.url));
@@ -44,7 +39,7 @@ export async function middleware(request: NextRequest) {
     }
 
     if (
-      (authUser.role === "LECTURER" && request.url.includes("/student")) ||
+      (authUser.role === "LECTURE" && request.url.includes("/student")) ||
       (authUser.role === "STUDENT" && request.url.includes("/staff"))
     ) {
       return NextResponse.redirect(new URL("/error", request.url));

@@ -7,7 +7,7 @@ import logo from "@/public/logo.png";
 import z from "zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { authorizeStudent } from "@/actions";
+import { authorizeStaff } from "@/actions";
 
 const schema = z.object({
   username: z.string(),
@@ -30,7 +30,7 @@ const AuthPage = () => {
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
-    const { redirect, error } = await authorizeStudent(data);
+    const { redirect, error } = await authorizeStaff(data);
 
     if (redirect) {
       router.push(redirect);
