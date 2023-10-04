@@ -69,7 +69,7 @@ const FinalsPage = () => {
             <div key={index}>
               <h2>{studentYear.year}</h2> {/* Student year heading */}
               {studentYear.semesters.map((semester, index) => (
-                <div key={index} className="flex flex-col space-y-2">
+                <div key={index} className="my-2 flex flex-col">
                   <div className="collapse bg-gray-50 shadow-md">
                     <input type="checkbox" />
                     <div className="collapse-title text-xl font-medium">
@@ -89,14 +89,16 @@ const FinalsPage = () => {
                             </tr>
                           </thead>
                           <tbody>
-                            <tr>
-                              <td className="text-sm text-gray-600">
-                                {semester.result.name}
-                              </td>
-                              <td className="text-sm text-gray-600">
-                                {semester.result.marks}
-                              </td>
-                            </tr>
+                            {semester.results.map((result, index) => (
+                              <tr key={index}>
+                                <td className="text-sm text-gray-600">
+                                  {result.name}
+                                </td>
+                                <td className="text-sm text-gray-600">
+                                  {result.marks}
+                                </td>
+                              </tr>
+                            ))}
                           </tbody>
                         </table>
                       </div>

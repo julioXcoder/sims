@@ -55,6 +55,10 @@ export async function POST(request: NextRequest) {
 
     cookies().set("token", token);
 
+    const response = NextResponse.next();
+
+    response.headers.set("token", token);
+
     return NextResponse.json({ redirect: "/student/dashboard" });
   } catch (ex) {
     // TODO: Log the console.error();

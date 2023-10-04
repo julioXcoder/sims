@@ -9,9 +9,17 @@ import { FaCreditCard } from "react-icons/fa";
 import { FaListCheck } from "react-icons/fa6";
 
 const links: Path[] = [
-  { title: "dashboard", path: "/student/dashboard", Icon: RxDashboard },
-  { title: "results", path: "/student/results", Icon: FaListCheck },
-  { title: "payments", path: "/student/results/payments", Icon: FaCreditCard },
+  {
+    title: "dashboard",
+    path: "/student/application/dashboard",
+    Icon: RxDashboard,
+  },
+  { title: "results", path: "/student/application/results", Icon: FaListCheck },
+  {
+    title: "payments",
+    path: "/student/application/results/payments",
+    Icon: FaCreditCard,
+  },
 ];
 
 const Sidebar = () => {

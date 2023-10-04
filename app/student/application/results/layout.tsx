@@ -3,8 +3,8 @@ import React, { ReactNode } from "react";
 import { Tabs } from "@/components";
 
 const items = [
-  { title: "CA", path: "/student/results" },
-  { title: "Finals", path: "/student/results/finals" },
+  { title: "CA", path: "/student/application/results" },
+  { title: "Finals", path: "/student/application/results/finals" },
 ];
 
 const StudentResultsLayout = async ({ children }: { children: ReactNode }) => {

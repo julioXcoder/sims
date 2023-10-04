@@ -3,7 +3,11 @@ import Navbar from "./navbar";
 import Sidebar from "./sidebar";
 import { getStudentData } from "@/actions";
 
-const StudentLayout = async ({ children }: { children: ReactNode }) => {
+const StudentApplicationLayout = async ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
   const { firstName, lastName } = await getStudentData();
 
   return (
@@ -19,4 +23,4 @@ const StudentLayout = async ({ children }: { children: ReactNode }) => {
   );
 };
 
-export default StudentLayout;
+export default StudentApplicationLayout;

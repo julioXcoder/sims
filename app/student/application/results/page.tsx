@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { getStudentCAResults } from "@/actions";
 import { Data, CASemester } from "@/types";
 
-const ResultsPage = () => {
+const CAResultsPage = () => {
   const [data, setData] = useState<Data<CASemester> | null>(null);
   const [selectedYear, setSelectedYear] = useState<string>("");
   const [error, setError] = useState("");
@@ -126,4 +126,4 @@ const ResultsPage = () => {
   }
 };
 
-export default ResultsPage;
+export default CAResultsPage;

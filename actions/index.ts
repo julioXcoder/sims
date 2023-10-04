@@ -14,18 +14,24 @@ import {
   SubjectInfo,
   CreateCAComponentsResponse,
   CAComponentInput,
-  StudentResults,
-  GetStudentsCAResults,
+  GetStudentsForSubjectInstanceCAResponse,
   StudentCAResults,
-  GetStudentsFinalResults,
+  GetStudentsForSubjectInstanceFinalResponse,
   StudentFinalResults,
 } from "@/types";
 import _ from "lodash";
 import { createToken } from "@/lib";
 
-const getStudentData = async () => {
+const getUserId = () => {
   const headersList = headers();
+
   const userId = headersList.get("userId");
+
+  return userId;
+};
+
+const getStudentData = async () => {
+  const userId = getUserId();
   if (!userId) return redirect("/auth");
   try {
     const student = await prisma.student.findUnique({
@@ -58,8 +64,7 @@ const getStudentData = async () => {
 };
 
 const getStudentCAResults = async (): Promise<GetStudentCAResultsResponse> => {
-  const headersList = headers();
-  const userId = headersList.get("userId");
+  const userId = getUserId();
   if (!userId) return { error: "Id Not Found" };
 
   try {
@@ -199,8 +204,7 @@ const getStudentCAResults = async (): Promise<GetStudentCAResultsResponse> => {
 
 const getStudentFinalResults =
   async (): Promise<GetStudentFinalResultsResponse> => {
-    const headersList = headers();
-    const userId = headersList.get("userId");
+    const userId = getUserId();
     if (!userId) return { error: "Id Not Found" };
 
     try {
@@ -349,7 +353,7 @@ const authorizeStudent = async ({
 
   cookies().set("token", token);
 
-  return { redirect: "/student/dashboard" };
+  return { redirect: "/student/application/dashboard" };
 };
 
 const authorizeStaff = async ({
@@ -464,74 +468,6 @@ async function getSubjects(): Promise<GetSubjectsResponse> {
     return { error: "" };
   }
 }
-
-// async function createCAComponents(
-//   caId: number,
-//   lecturerId: number,
-//   subjectInstanceId: number,
-//   components: CAComponentInput[],
-// ): Promise<CreateCAComponentsResponse> {
-//   try {
-//     const subjectInstance = await prisma.subjectInstance.findUnique({
-//       where: {
-//         id: subjectInstanceId,
-//       },
-//       include: {
-//         studentYears: {
-//           include: {
-//             student: true,
-//           },
-//         },
-//       },
-//     });
-
-//     if (!subjectInstance) {
-//       return { error: "Subject Instance Not Found" };
-//     }
-
-//     if (subjectInstance.lecturerId !== lecturerId) {
-//       return {
-//         error: "You are not authorized to create a CA for this subject",
-//       };
-//     }
-
-//     const newCA = await prisma.cA.create({
-//       data: {
-//         subjectInstanceId: subjectInstance.id,
-//       },
-//     });
-
-//     const createdComponentsCount = await prisma.cAComponent.createMany({
-//       data: components.map((component) => ({
-//         ...component,
-//         CAId: newCA.id,
-//       })),
-//     });
-
-//     const createdComponents = await prisma.cAComponent.findMany({
-//       where: {
-//         CAId: newCA.id,
-//       },
-//     });
-
-//     for (const component of createdComponents) {
-//       for (const student of subjectInstance.students) {
-//         await prisma.cAResult.create({
-//           data: {
-//             marks: null,
-//             studentYearId: student.id, // Replace with the actual student year ID
-//             componentId: component.id,
-//             subjectInstanceId: subjectInstance.id,
-//           },
-//         });
-//       }
-//     }
-
-//     return { data: createdComponents };
-//   } catch (error) {
-//     return { error: "" };
-//   }
-// }
 
 async function createCAComponents(
   caId: number,
@@ -682,7 +618,7 @@ async function updateLecturerForSubjectInstance(
 // Function to get CAresults for a subject instance
 async function getStudentsForSubjectInstanceCAResults(
   subjectInstanceId: number,
-): Promise<GetStudentsCAResults> {
+): Promise<GetStudentsForSubjectInstanceCAResponse> {
   try {
     const caResults = await prisma.cAResult.findMany({
       where: {
@@ -730,7 +666,7 @@ async function getStudentsForSubjectInstanceCAResults(
 // Function to get FinalResults for a subject instance
 async function getStudentsForSubjectInstanceFinalResults(
   subjectInstanceId: number,
-): Promise<GetStudentsFinalResults> {
+): Promise<GetStudentsForSubjectInstanceFinalResponse> {
   try {
     // Fetch all the students
     const students = await prisma.student.findMany();
