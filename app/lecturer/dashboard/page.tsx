@@ -1,15 +1,20 @@
 import React from "react";
 
-import { getSubjects, getStudentsForSubjectInstance } from "@/actions";
+import {
+  getSubjects,
+  getStudentsForSubjectInstance,
+  getStudentsForSubjectInstanceFinalResults,
+  getStudentsForSubjectInstanceCAResults,
+} from "@/actions";
 
 const DashboardPage = async () => {
   const { data, error } = await getSubjects();
-  const response = await getStudentsForSubjectInstance(3);
+  const response = await getStudentsForSubjectInstanceCAResults(2);
 
   return (
     <div>
       <div>DATA: {JSON.stringify(data)}</div>
-      <div>ERROR: {JSON.stringify(response.error)}</div>
+      <div>ERROR: {JSON.stringify(response.data)}</div>
     </div>
   );
 };

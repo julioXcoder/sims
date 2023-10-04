@@ -41,6 +41,8 @@ export async function POST(request: NextRequest) {
 
     const validation = BodySchema.safeParse(body);
 
+    const students = await prisma.student.findMany();
+
     if (!validation.success) {
       return NextResponse.json({ error: "Invalid data" }, { status: 400 });
     }
@@ -99,12 +101,25 @@ export async function POST(request: NextRequest) {
     });
 
     // Create new subject instances for the semester
-    await prisma.subjectInstance.createMany({
-      data: subjects.map((subject) => ({
-        ...subject,
-        semesterId: newSemester.id,
-      })),
-    });
+    for (const subject of subjects) {
+      const newSubjectInstance = await prisma.subjectInstance.create({
+        data: {
+          ...subject,
+          semesterId: newSemester.id,
+        },
+      });
+
+      // For each new SubjectInstance, create a FinalResult record for each student
+      for (const student of students) {
+        await prisma.finalResult.create({
+          data: {
+            marks: null,
+            studentYearId: student.id, // Connect the FinalResult to the StudentYear
+            subjectInstanceId: newSubjectInstance.id, // Connect the FinalResult to the SubjectInstance
+          },
+        });
+      }
+    }
 
     const semesterData = _.pick(newSemester, ["id", "name"]);
 

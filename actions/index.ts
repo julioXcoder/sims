@@ -14,6 +14,11 @@ import {
   SubjectInfo,
   CreateCAComponentsResponse,
   CAComponentInput,
+  StudentResults,
+  GetStudentsCAResults,
+  StudentCAResults,
+  GetStudentsFinalResults,
+  StudentFinalResults,
 } from "@/types";
 import _ from "lodash";
 import { createToken } from "@/lib";
@@ -592,19 +597,19 @@ async function createCAComponents(
 
 async function getStudentsForSubjectInstance(subjectInstanceId: number) {
   try {
-    const caResults = await prisma.cAResult.findMany({
-      where: {
-        subjectInstanceId: subjectInstanceId,
-      },
-      include: {
-        studentYear: {
-          include: {
-            student: true,
-          },
-        },
-        component: true,
-      },
-    });
+    // const caResults = await prisma.cAResult.findMany({
+    //   where: {
+    //     subjectInstanceId: subjectInstanceId,
+    //   },
+    //   include: {
+    //     studentYear: {
+    //       include: {
+    //         student: true,
+    //       },
+    //     },
+    //     component: true,
+    //   },
+    // });
 
     const finalResults = await prisma.finalResult.findMany({
       where: {
@@ -624,20 +629,13 @@ async function getStudentsForSubjectInstance(subjectInstanceId: number) {
       },
     });
 
-    if (!caResults || !finalResults) {
+    if (!finalResults) {
       return { error: "No Results Found for this Subject Instance" };
     }
 
     // Extract the students from the CAResults and FinalResults
-    const students = caResults.map((carResult) => ({
-      ...carResult.studentYear.student,
-      caResults: [
-        {
-          name: carResult.component.name,
-          marks: carResult.marks,
-        },
-      ],
-      finalResults: finalResults
+    const students = finalResults.map((carResult) => {
+      const studentFinalResults = finalResults
         .filter(
           (finalResult) =>
             finalResult.studentYearId === carResult.studentYearId,
@@ -645,12 +643,147 @@ async function getStudentsForSubjectInstance(subjectInstanceId: number) {
         .map((finalResult) => ({
           name: finalResult.subjectInstance.subject.name,
           marks: finalResult.marks,
-        })),
-    }));
+        }));
+
+      return {
+        ...carResult.studentYear.student,
+        caResults: [{}],
+        finalResults:
+          studentFinalResults.length > 0 ? studentFinalResults : null,
+      };
+    });
 
     return { data: students };
   } catch (error) {
     return { error: "" };
+  }
+}
+
+async function updateLecturerForSubjectInstance(
+  subjectInstanceId: number,
+  newLecturerId: number,
+) {
+  try {
+    const updatedSubjectInstance = await prisma.subjectInstance.update({
+      where: {
+        id: subjectInstanceId,
+      },
+      data: {
+        lecturerId: newLecturerId,
+      },
+    });
+
+    return { data: updatedSubjectInstance };
+  } catch (error) {
+    return { error: "" };
+  }
+}
+
+// Function to get CAresults for a subject instance
+async function getStudentsForSubjectInstanceCAResults(
+  subjectInstanceId: number,
+): Promise<GetStudentsCAResults> {
+  try {
+    const caResults = await prisma.cAResult.findMany({
+      where: {
+        subjectInstanceId: subjectInstanceId,
+      },
+      include: {
+        studentYear: {
+          include: {
+            student: true,
+          },
+        },
+        component: true,
+      },
+    });
+
+    if (!caResults) {
+      return { error: "No CA Results Found for this Subject Instance" };
+    }
+
+    // Group the CA results by student
+    const studentsMap: { [key: number]: StudentCAResults } = {};
+    for (const carResult of caResults) {
+      const studentId = carResult.studentYear.student.id;
+      if (!studentsMap[studentId]) {
+        studentsMap[studentId] = {
+          ...carResult.studentYear.student,
+          caResults: [],
+        };
+      }
+      studentsMap[studentId].caResults.push({
+        name: carResult.component.name,
+        marks: carResult.marks,
+      });
+    }
+
+    // Convert the students map to an array
+    const students: StudentCAResults[] = Object.values(studentsMap);
+
+    return { data: students };
+  } catch (error) {
+    return { error: "An error occurred while processing your request" };
+  }
+}
+
+// Function to get FinalResults for a subject instance
+async function getStudentsForSubjectInstanceFinalResults(
+  subjectInstanceId: number,
+): Promise<GetStudentsFinalResults> {
+  try {
+    // Fetch all the students
+    const students = await prisma.student.findMany();
+
+    const studentsFinalResults: StudentFinalResults[] = [];
+
+    for (const student of students) {
+      let finalResult = await prisma.finalResult.findFirst({
+        where: {
+          subjectInstanceId: subjectInstanceId,
+          studentYearId: student.id,
+        },
+        include: {
+          subjectInstance: {
+            include: {
+              subject: true,
+            },
+          },
+        },
+      });
+
+      // If the FinalResult record doesn't exist, create a new one with marks set to null
+      if (!finalResult) {
+        finalResult = await prisma.finalResult.create({
+          data: {
+            marks: null,
+            studentYearId: student.id,
+            subjectInstanceId: subjectInstanceId,
+          },
+          include: {
+            subjectInstance: {
+              include: {
+                subject: true,
+              },
+            },
+          },
+        });
+      }
+
+      const studentFinalResults: StudentFinalResults = {
+        ...student,
+        finalResults: {
+          name: finalResult.subjectInstance.subject.name,
+          marks: finalResult.marks,
+        },
+      };
+
+      studentsFinalResults.push(studentFinalResults);
+    }
+
+    return { data: studentsFinalResults };
+  } catch (error) {
+    return { error: "An error occurred while processing your request" };
   }
 }
 
@@ -661,4 +794,6 @@ export {
   authorizeStudent,
   getSubjects,
   getStudentsForSubjectInstance,
+  getStudentsForSubjectInstanceCAResults,
+  getStudentsForSubjectInstanceFinalResults,
 };

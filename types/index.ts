@@ -13,11 +13,8 @@ interface Result {
 
 interface StudentResults {
   id: number;
-  password: string;
   firstName: string;
   lastName: string;
-  yearId: number;
-  role: string;
   caResults: Result[];
   finalResults: Result[];
 }
@@ -30,6 +27,33 @@ interface SubjectResult {
 interface FinalsResult {
   name: string;
   marks: number | null;
+}
+
+interface Student {
+  id: number;
+  password: string;
+  firstName: string;
+  lastName: string;
+  yearId: number;
+  role: string;
+}
+
+interface CAResult {
+  name: string;
+  marks: number | null;
+}
+
+interface FinalResult {
+  name: string;
+  marks: number | null;
+}
+
+interface StudentCAResults extends Student {
+  caResults: CAResult[];
+}
+
+interface StudentFinalResults extends Student {
+  finalResults: FinalResult;
 }
 
 interface CASemester {
@@ -97,6 +121,16 @@ interface AuthorizeUserResponse {
   error?: string;
 }
 
+interface GetStudentsCAResults {
+  data?: StudentCAResults[];
+  error?: string;
+}
+
+interface GetStudentsFinalResults {
+  data?: StudentFinalResults[];
+  error?: string;
+}
+
 interface GetStudentsForSubjectInstanceResponse {
   data?: StudentResults[];
   error?: string;
@@ -118,4 +152,9 @@ export type {
   CAComponentInput,
   CreateCAComponentsResponse,
   GetStudentsForSubjectInstanceResponse,
+  StudentResults,
+  GetStudentsCAResults,
+  GetStudentsFinalResults,
+  StudentCAResults,
+  StudentFinalResults,
 };
