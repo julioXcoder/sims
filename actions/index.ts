@@ -613,9 +613,7 @@ async function createCAComponents(
     });
 
     for (const component of createdComponents) {
-      console.log("component", component);
       for (const studentYear of studentYears) {
-        console.log("Student Year ID", studentYear.id);
         const ca = await prisma.cAResult.create({
           data: {
             marks: null,
@@ -624,7 +622,6 @@ async function createCAComponents(
             subjectInstanceId: subjectInstanceId,
           },
         });
-        console.log("ca", ca);
       }
     }
 

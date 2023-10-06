@@ -38,6 +38,7 @@ const ResultsPage = () => {
   const [selectedSubject, setSelectedSubject] = useState<SubjectInfo | null>(
     null,
   );
+  const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
   const [searchTerm, setSearchTerm] = useState("");
@@ -48,33 +49,47 @@ const ResultsPage = () => {
     fetchSubjects();
   }, []);
 
-  // Fetch CA results when selected subject changes
   useEffect(() => {
     if (selectedSubject) {
-      const fetchCAResults = async () => {
-        const caResultsResult = await getStudentsForSubjectInstanceCAResults(
-          selectedSubject.subjectInstanceId,
-        );
-        if (caResultsResult.data) {
-          setData(caResultsResult.data);
-        } else if (caResultsResult.error) {
-          setError(caResultsResult.error);
-        }
-      };
-
-      fetchCAResults();
+      fetchCAResults(selectedSubject.subjectInstanceId);
     }
-  }, [selectedSubject, subjects]);
+  }, [selectedSubject]);
+
+  const fetchCAResults = async (subjectInstanceId: number) => {
+    const caResultsResult =
+      await getStudentsForSubjectInstanceCAResults(subjectInstanceId);
+    if (caResultsResult.data) {
+      setData(caResultsResult.data);
+    } else if (caResultsResult.error) {
+      setError(caResultsResult.error);
+    }
+  };
 
   const fetchSubjects = async () => {
     const subjectsResult = await getSubjects();
     if (subjectsResult.data) {
       setSubjects(subjectsResult.data);
-      setSelectedSubject(subjectsResult.data[0]);
+      const firstSubject = subjectsResult.data[0];
+      setSelectedSubject(firstSubject);
+
+      if (firstSubject) {
+        // Fetch CA results for the first subject
+        await fetchCAResults(firstSubject.subjectInstanceId);
+      }
     } else if (subjectsResult.error) {
       setError(subjectsResult.error);
     }
   };
+
+  // const fetchSubjects = async () => {
+  //   const subjectsResult = await getSubjects();
+  //   if (subjectsResult.data) {
+  //     setSubjects(subjectsResult.data);
+  //     setSelectedSubject(subjectsResult.data[0]);
+  //   } else if (subjectsResult.error) {
+  //     setError(subjectsResult.error);
+  //   }
+  // };
 
   const handleSubmit = async (
     id: number,
@@ -115,6 +130,7 @@ const ResultsPage = () => {
   };
 
   const handleCreateCAComponent = async (components: CAComponentInput[]) => {
+    setLoading(true);
     if (selectedSubject) {
       const response = await createCAComponents(
         selectedSubject.subjectInstanceId,
@@ -123,11 +139,14 @@ const ResultsPage = () => {
 
       if (response.data) {
         await fetchSubjects();
+        setLoading(false);
       } else if (response.error) {
         setError(response.error);
+        setLoading(false);
       }
     } else {
       setError("Error");
+      setLoading(false);
     }
   };
 
@@ -135,7 +154,7 @@ const ResultsPage = () => {
     return <div>{error}</div>;
   }
 
-  if (!data || !subjects) {
+  if (!data || !subjects || loading) {
     return <div>Loading...</div>;
   }
 

@@ -78,12 +78,13 @@ const CAResultsPage = () => {
             <div key={index}>
               <h2>{studentYear.year}</h2> {/* Student year heading */}
               {studentYear.semesters.map((semester, index) => (
-                <div key={index} className="flex flex-col space-y-2">
+                <div key={index} className="my-2 flex flex-col">
                   <div className="collapse bg-gray-50 shadow-md">
                     <input type="checkbox" />
                     <div className="collapse-title text-xl font-medium">
                       {semester.semester}
                     </div>
+
                     <div className="collapse-content">
                       <div className="overflow-x-auto">
                         {semester.results.map((result, index) => (

@@ -89,9 +89,9 @@ const CreateCAComponents = ({ onCreateCAComponent }: Props) => {
       marks: input.value,
     }));
 
-    await onCreateCAComponent(resultArray);
-
     (document.getElementById("my_modal_1") as HTMLDialogElement).close();
+
+    await onCreateCAComponent(resultArray);
   };
 
   return (
