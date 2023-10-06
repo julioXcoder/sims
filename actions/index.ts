@@ -480,7 +480,7 @@ async function getSubjects(): Promise<GetSubjectsResponse> {
       level: subjectInstance.subject.year.level.name,
       year: subjectInstance.subject.year.name,
       name: subjectInstance.subject.name,
-      id: subjectInstance.id,
+      subjectInstanceId: subjectInstance.id,
       caComponents: subjectInstance.CAs.flatMap((ca) =>
         ca.components.map((component) => ({
           id: component.id,

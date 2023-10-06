@@ -87,7 +87,7 @@ interface SubjectInfo {
   level: string;
   year: string;
   name: string;
-  id: number;
+  subjectInstanceId: number;
   caComponents: CAComponentInfo[];
 }
 
