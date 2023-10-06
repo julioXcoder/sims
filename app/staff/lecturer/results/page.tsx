@@ -2,13 +2,28 @@
 
 import {
   getStudentsForSubjectInstanceCAResults,
-  updateStudentCAResults,
   getSubjects,
+  updateStudentCAResults,
 } from "@/actions";
-import { useForm, FieldValues } from "react-hook-form";
-import { MdModeEdit } from "react-icons/md";
-import { StudentCAResults, CAResult, SubjectInfo } from "@/types";
-import { useState, useEffect } from "react";
+import { CAResult, StudentCAResults, SubjectInfo } from "@/types";
+import { useEffect, useState } from "react";
+import { FieldValues } from "react-hook-form";
+import ResultsTable from "./resultsTable";
+import TableHeader from "./tableHeader";
+import { Pagination } from "@/components";
+
+const studentCAResultsArray: StudentCAResults[] = Array.from(
+  { length: 100 },
+  (_, i) => ({
+    id: i + 4,
+    firstName: `Student ${i + 4}`,
+    lastName: `Lastname ${i + 4}`,
+    caResults: [
+      { id: 1, name: "Test 1", marks: Math.floor(Math.random() * 100) },
+      { id: 2, name: "Test 2", marks: Math.floor(Math.random() * 100) },
+    ],
+  }),
+);
 
 const ResultsPage = () => {
   const [data, setData] = useState<StudentCAResults[] | null>(null);
@@ -16,23 +31,14 @@ const ResultsPage = () => {
   const [selectedSubject, setSelectedSubject] = useState<SubjectInfo | null>(
     null,
   );
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState("");
-  const { register, handleSubmit } = useForm();
 
   // Fetch subjects and initial CA results
   useEffect(() => {
-    const fetchData = async () => {
-      const subjectsResult = await getSubjects();
-      if (subjectsResult.data) {
-        setSubjects(subjectsResult.data);
-        setSelectedSubject(subjectsResult.data[0]);
-      } else if (subjectsResult.error) {
-        setError(subjectsResult.error);
-      }
-    };
-
-    fetchData();
+    fetchSubjects();
   }, []);
 
   // Fetch CA results when selected subject changes
@@ -53,7 +59,17 @@ const ResultsPage = () => {
     }
   }, [selectedSubject]);
 
-  const onSubmit = async (
+  const fetchSubjects = async () => {
+    const subjectsResult = await getSubjects();
+    if (subjectsResult.data) {
+      setSubjects(subjectsResult.data);
+      setSelectedSubject(subjectsResult.data[0]);
+    } else if (subjectsResult.error) {
+      setError(subjectsResult.error);
+    }
+  };
+
+  const handleSubmit = async (
     id: number,
     caResults: CAResult[],
     data: FieldValues,
@@ -103,178 +119,32 @@ const ResultsPage = () => {
     return <div>Create CA results!!</div>;
   }
 
-  return (
-    <div className="h-[30rem]">
-      <div className="grid gap-3 border-b border-gray-200 px-6 pb-3 dark:border-gray-700 md:flex md:items-center md:justify-between">
-        <div className="sm:col-span-1">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Type here"
-              className="input input-bordered w-full pl-11"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <div className="absolute inset-y-0 left-0 flex items-center pl-4">
-              <svg
-                className="h-4 w-4 text-gray-400"
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                viewBox="0 0 16 16"
-              >
-                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-        <div className="sm:col-span-2 md:grow">
-          <div className="flex justify-end gap-x-2">
-            <div className="relative inline-block">
-              <div className="dropdown dropdown-end">
-                <label tabIndex={0} className="btn m-1">
-                  Options
-                </label>
-                <ul
-                  tabIndex={0}
-                  className="menu dropdown-content rounded-box z-[2] w-52 bg-base-100 p-2 shadow"
-                >
-                  <h1>Title</h1>
-                  <li>
-                    <a>Item 1</a>
-                  </li>
-                  <li>
-                    <a>Item 2</a>
-                  </li>
-                  <h1>Title</h1>
-                  <li>
-                    <a>Item 1</a>
-                  </li>
-                  <li>
-                    <a>Item 2</a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-            <div className="relative inline-block">
-              <select
-                className="select select-bordered w-full max-w-xs"
-                value={selectedSubject ? selectedSubject.subjectInstanceId : ""}
-                onChange={(e) => {
-                  const selectedSubjectId = parseInt(e.target.value);
-                  setSelectedSubject(
-                    subjects.find(
-                      (subject) =>
-                        subject.subjectInstanceId === selectedSubjectId,
-                    ) || null,
-                  );
-                }}
-              >
-                {subjects.map((subject) => (
-                  <option
-                    key={subject.subjectInstanceId}
-                    value={subject.subjectInstanceId}
-                  >
-                    {subject.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="h-[calc(100%-4rem)] overflow-x-auto">
-        <table className="table table-pin-rows table-md">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              {data[0].caResults.map((result, index) => (
-                <th key={index}>{result.name}</th>
-              ))}
-              <th>EDIT</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredData.map(({ id, firstName, lastName, caResults }) => (
-              <tr className="hover" key={id}>
-                <th>{id}</th>
-                <td>{`${firstName} ${lastName}`}</td>
-                {caResults.map((result, index) => (
-                  // <td key={index}>{result.marks ? result.marks : "null"}</td>
-                  <td key={index}>{result.marks}</td>
-                ))}
-                <td>
-                  <label htmlFor={`my_modal_${id}`}>
-                    <MdModeEdit
-                      onClick={() =>
-                        (
-                          document.getElementById(
-                            `my_modal_${id}`,
-                          ) as HTMLDialogElement
-                        ).showModal()
-                      }
-                      className="hover:cursor-pointer"
-                      size={16}
-                    />
-                  </label>
-                  {/* FIXME: MODAL */}
-                  <div>
-                    <dialog id={`my_modal_${id}`} className="modal">
-                      <div className="modal-box">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-bold">Edit CA Results</h3>
-                          <div className="-mt-2">
-                            <form method="dialog">
-                              <button className="btn btn-circle btn-sm outline-none">
-                                X
-                              </button>
-                            </form>
-                          </div>
-                        </div>
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentData = filteredData.slice(startIndex, endIndex);
 
-                        <form className="form-control w-full max-w-xs">
-                          {caResults.map((result, index) => (
-                            <div className="mb-2" key={index}>
-                              <label className="label">
-                                <span className="label-text">
-                                  {result.name}
-                                </span>
-                              </label>
-                              <input
-                                type="number"
-                                {...register(
-                                  `students[${id}].caResults[${index}].marks`,
-                                )}
-                                defaultValue={result.marks ? result.marks : 0}
-                                className="input input-bordered w-full max-w-xs"
-                              />
-                            </div>
-                          ))}
-                        </form>
-                        <div className="modal-action">
-                          <button
-                            className="btn"
-                            onClick={handleSubmit((data) =>
-                              onSubmit(id, caResults, data),
-                            )}
-                          >
-                            submit
-                          </button>
-                        </div>
-                      </div>
-                      <form method="dialog" className="modal-backdrop">
-                        <button className="cursor-default">close</button>
-                      </form>
-                    </dialog>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot></tfoot>
-        </table>
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+
+  return (
+    <div className="h-[37rem]">
+      <TableHeader
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        subjects={subjects}
+        selectedSubject={selectedSubject}
+        setSelectedSubject={setSelectedSubject}
+      />
+      <ResultsTable
+        onSubmit={handleSubmit}
+        data={data}
+        filteredData={currentData}
+      />
+      <div className="mt-2">
+        <Pagination
+          totalPages={totalPages}
+          currentPage={currentPage}
+          onChange={(page) => setCurrentPage(page)}
+        />
       </div>
     </div>
   );

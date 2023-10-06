@@ -1,3 +1,4 @@
 import Tabs from "./tabs";
+import Pagination from "./pagination";
 
-export { Tabs };
+export { Tabs, Pagination };
