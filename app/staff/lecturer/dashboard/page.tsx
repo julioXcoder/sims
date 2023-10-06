@@ -4,7 +4,7 @@ import { getSubjects, getStudentsForSubjectInstanceCAResults } from "@/actions";
 
 const DashboardPage = async () => {
   const { data, error } = await getSubjects();
-  const response = await getStudentsForSubjectInstanceCAResults(2);
+  const response = await getStudentsForSubjectInstanceCAResults(1);
 
   return (
     <div>

@@ -42,6 +42,7 @@ interface StaffData {
 }
 
 interface CAResult {
+  id: number;
   name: string;
   marks: number | null;
 }
@@ -172,4 +173,5 @@ export type {
   StudentData,
   GetStaffDataResponse,
   StaffData,
+  CAResult,
 };

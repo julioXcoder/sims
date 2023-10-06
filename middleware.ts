@@ -2,13 +2,6 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyAuth } from "./lib";
 
-interface RoleRoutes {
-  [key: string]: string[];
-  LECTURER: string[];
-  STUDENT: string[];
-  EXAMINATION_OFFICER: string[];
-}
-
 export async function middleware(request: NextRequest) {
   let token = request.cookies.get("token")?.value;
   const authUser =
@@ -17,7 +10,6 @@ export async function middleware(request: NextRequest) {
   if (authUser) {
     const userId = authUser.id.toString();
     const response = NextResponse.next();
-    console.log("role", authUser.role);
 
     response.headers.set("userId", userId);
 

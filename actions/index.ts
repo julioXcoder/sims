@@ -440,7 +440,7 @@ async function getSubjects(): Promise<GetSubjectsResponse> {
     const subjects = await prisma.subjectInstance.findMany({
       where: {
         lecturerId: userId,
-        semesterId: semester.id,
+        semesterId: 1,
       },
       include: {
         subject: {
@@ -483,6 +483,7 @@ async function getSubjects(): Promise<GetSubjectsResponse> {
       id: subjectInstance.id,
       caComponents: subjectInstance.CAs.flatMap((ca) =>
         ca.components.map((component) => ({
+          id: component.id,
           name: component.name,
           marks: component.marks,
         })),
@@ -496,7 +497,6 @@ async function getSubjects(): Promise<GetSubjectsResponse> {
 }
 
 async function createCAComponents(
-  caId: number,
   lecturerId: number,
   subjectInstanceId: number,
   components: CAComponentInput[],
@@ -675,6 +675,7 @@ async function getStudentsForSubjectInstanceCAResults(
         };
       }
       studentsMap[studentId].caResults.push({
+        id: carResult.component.id,
         name: carResult.component.name,
         marks: carResult.marks,
       });
@@ -683,7 +684,16 @@ async function getStudentsForSubjectInstanceCAResults(
     // Convert the students map to an array
     const students: StudentCAResults[] = Object.values(studentsMap);
 
-    return { data: students };
+    const pickedStudents = students.map(
+      ({ id, firstName, lastName, caResults }) => ({
+        id,
+        firstName,
+        lastName,
+        caResults,
+      }),
+    );
+
+    return { data: pickedStudents };
   } catch (error) {
     return { error: "An error occurred while processing your request" };
   }
@@ -749,6 +759,39 @@ async function getStudentsForSubjectInstanceFinalResults(
   }
 }
 
+async function updateStudentCAResults(
+  studentId: number,
+  subjectInstanceId: number,
+  caResults: { componentId: number; marks: number }[],
+): Promise<{ response?: string; error?: string }> {
+  try {
+    // Start a transaction
+    const prismaTransaction = prisma.$transaction(
+      caResults.map((caResult) =>
+        prisma.cAResult.updateMany({
+          where: {
+            studentYear: { studentId: studentId },
+            componentId: caResult.componentId,
+            subjectInstanceId: subjectInstanceId,
+          },
+          data: {
+            marks: caResult.marks,
+          },
+        }),
+      ),
+    );
+
+    // Execute the transaction
+    await prismaTransaction;
+    return { response: "ok" };
+  } catch (error) {
+    console.error("An error occurred while updating the CA Results:", error);
+    return {
+      error: `An error occurred while updating the CA Results: ${error}`,
+    };
+  }
+}
+
 export {
   getStudentData,
   getStudentCAResults,
@@ -760,4 +803,5 @@ export {
   getStudentsForSubjectInstanceFinalResults,
   getStaffData,
   authorizeStaff,
+  updateStudentCAResults,
 };
