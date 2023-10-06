@@ -4,13 +4,20 @@ import {
   getStudentsForSubjectInstanceCAResults,
   getSubjects,
   updateStudentCAResults,
+  createCAComponents,
 } from "@/actions";
-import { CAResult, StudentCAResults, SubjectInfo } from "@/types";
+import {
+  CAComponentInput,
+  CAResult,
+  StudentCAResults,
+  SubjectInfo,
+} from "@/types";
 import { useEffect, useState } from "react";
 import { FieldValues } from "react-hook-form";
 import ResultsTable from "./resultsTable";
 import TableHeader from "./tableHeader";
 import { Pagination } from "@/components";
+import CreateCAComponents from "./createCAComponents ";
 
 const studentCAResultsArray: StudentCAResults[] = Array.from(
   { length: 100 },
@@ -57,7 +64,7 @@ const ResultsPage = () => {
 
       fetchCAResults();
     }
-  }, [selectedSubject]);
+  }, [selectedSubject, subjects]);
 
   const fetchSubjects = async () => {
     const subjectsResult = await getSubjects();
@@ -81,19 +88,46 @@ const ResultsPage = () => {
       }),
     );
 
-    const response = await updateStudentCAResults(id, 1, studentCAResults);
+    if (selectedSubject) {
+      const response = await updateStudentCAResults(
+        id,
+        selectedSubject.subjectInstanceId,
+        studentCAResults,
+      );
 
-    if (response.error) {
-      console.error(response.error);
-      // Handle error (e.g., show an error message or revert the form values)
-    } else {
-      (document.getElementById(`my_modal_${id}`) as HTMLDialogElement).close();
-      const result = await getStudentsForSubjectInstanceCAResults(1);
-      if (result.data) {
-        setData(result.data);
-      } else if (result.error) {
-        setError(result.error);
+      if (response.error) {
+        console.error(response.error);
+        // Handle error (e.g., show an error message or revert the form values)
+      } else {
+        (
+          document.getElementById(`my_modal_${id}`) as HTMLDialogElement
+        ).close();
+        const result = await getStudentsForSubjectInstanceCAResults(
+          selectedSubject.subjectInstanceId,
+        );
+        if (result.data) {
+          setData(result.data);
+        } else if (result.error) {
+          setError(result.error);
+        }
       }
+    }
+  };
+
+  const handleCreateCAComponent = async (components: CAComponentInput[]) => {
+    if (selectedSubject) {
+      const response = await createCAComponents(
+        selectedSubject.subjectInstanceId,
+        components,
+      );
+
+      if (response.data) {
+        await fetchSubjects();
+      } else if (response.error) {
+        setError(response.error);
+      }
+    } else {
+      setError("Error");
     }
   };
 
@@ -114,11 +148,6 @@ const ResultsPage = () => {
       student.id.toString() === searchTerm,
   );
 
-  // Check if selected subject has CA components
-  if (selectedSubject && !selectedSubject.caComponents.length) {
-    return <div>Create CA results!!</div>;
-  }
-
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
@@ -134,18 +163,26 @@ const ResultsPage = () => {
         selectedSubject={selectedSubject}
         setSelectedSubject={setSelectedSubject}
       />
-      <ResultsTable
-        onSubmit={handleSubmit}
-        data={data}
-        filteredData={currentData}
-      />
-      <div className="mt-2">
-        <Pagination
-          totalPages={totalPages}
-          currentPage={currentPage}
-          onChange={(page) => setCurrentPage(page)}
-        />
-      </div>
+      {selectedSubject && !selectedSubject.caComponents.length ? (
+        <>
+          <CreateCAComponents onCreateCAComponent={handleCreateCAComponent} />
+        </>
+      ) : (
+        <>
+          <ResultsTable
+            onSubmit={handleSubmit}
+            data={data}
+            filteredData={currentData}
+          />
+          <div className="mt-2">
+            <Pagination
+              totalPages={totalPages}
+              currentPage={currentPage}
+              onChange={(page) => setCurrentPage(page)}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };

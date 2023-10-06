@@ -440,7 +440,7 @@ async function getSubjects(): Promise<GetSubjectsResponse> {
     const subjects = await prisma.subjectInstance.findMany({
       where: {
         lecturerId: userId,
-        semesterId: 1,
+        semesterId: semester.id,
       },
       include: {
         subject: {
@@ -496,27 +496,101 @@ async function getSubjects(): Promise<GetSubjectsResponse> {
   }
 }
 
+// async function createCAComponents(
+//   subjectInstanceId: number,
+//   components: CAComponentInput[],
+// ): Promise<CreateCAComponentsResponse> {
+//   try {
+//     const carResults = await prisma.cAResult.findMany({
+//       where: {
+//         subjectInstanceId: subjectInstanceId,
+//       },
+//       include: {
+//         studentYear: {
+//           include: {
+//             student: true,
+//           },
+//         },
+//       },
+//     });
+
+//     if (!carResults) {
+//       return { error: "No CAResults Found for this Subject Instance" };
+//     }
+
+//     const newCA = await prisma.cA.create({
+//       data: {
+//         subjectInstanceId: subjectInstanceId,
+//       },
+//     });
+
+//     const createdComponentsCount = await prisma.cAComponent.createMany({
+//       data: components.map((component) => ({
+//         ...component,
+//         CAId: newCA.id,
+//       })),
+//     });
+
+//     const createdComponents = await prisma.cAComponent.findMany({
+//       where: {
+//         CAId: newCA.id,
+//       },
+//     });
+
+//     for (const component of createdComponents) {
+//       console.log("component", component);
+//       for (const carResult of carResults) {
+//         console.log("Component ID", carResult.componentId);
+//         const ca = await prisma.cAResult.create({
+//           data: {
+//             marks: null,
+//             studentYearId: carResult.studentYearId,
+//             componentId: component.id,
+//             subjectInstanceId: subjectInstanceId,
+//           },
+//         });
+//         console.log("ca", ca);
+//       }
+//     }
+
+//     return { data: createdComponents };
+//   } catch (error) {
+//     return { error: "" };
+//   }
+// }
+
 async function createCAComponents(
-  lecturerId: number,
   subjectInstanceId: number,
   components: CAComponentInput[],
 ): Promise<CreateCAComponentsResponse> {
   try {
-    const carResults = await prisma.cAResult.findMany({
+    // Fetch the subject instance
+    const subjectInstance = await prisma.subjectInstance.findUnique({
       where: {
-        subjectInstanceId: subjectInstanceId,
+        id: subjectInstanceId,
       },
       include: {
-        studentYear: {
+        subject: {
           include: {
-            student: true,
+            year: {
+              include: {
+                studentYears: true,
+              },
+            },
           },
         },
       },
     });
 
-    if (!carResults) {
-      return { error: "No CAResults Found for this Subject Instance" };
+    if (!subjectInstance) {
+      return { error: "No Subject Instance found" };
+    }
+
+    // Extract the student years
+    const studentYears = subjectInstance.subject.year.studentYears;
+
+    if (!studentYears.length) {
+      return { error: "No students found for this subject instance" };
     }
 
     const newCA = await prisma.cA.create({
@@ -539,20 +613,24 @@ async function createCAComponents(
     });
 
     for (const component of createdComponents) {
-      for (const carResult of carResults) {
-        await prisma.cAResult.create({
+      console.log("component", component);
+      for (const studentYear of studentYears) {
+        console.log("Student Year ID", studentYear.id);
+        const ca = await prisma.cAResult.create({
           data: {
             marks: null,
-            studentYearId: carResult.studentYearId,
+            studentYearId: studentYear.id,
             componentId: component.id,
             subjectInstanceId: subjectInstanceId,
           },
         });
+        console.log("ca", ca);
       }
     }
 
     return { data: createdComponents };
   } catch (error) {
+    console.error(error);
     return { error: "" };
   }
 }
@@ -804,4 +882,5 @@ export {
   getStaffData,
   authorizeStaff,
   updateStudentCAResults,
+  createCAComponents,
 };

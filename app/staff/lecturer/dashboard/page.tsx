@@ -8,7 +8,7 @@ import {
 
 const DashboardPage = async () => {
   const { data, error } = await getSubjects();
-  const response = await getStudentsForSubjectInstanceCAResults(1);
+  const response = await getStudentsForSubjectInstanceCAResults(2);
 
   return (
     <div>
