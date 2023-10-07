@@ -1,0 +1,261 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+
+interface Classroom {
+  name: string;
+  seats: number;
+  available: boolean;
+}
+
+interface Course {
+  name: string;
+  students: number;
+  subjects: string[];
+  sockets: number[];
+}
+
+interface DayStructure {
+  type: string;
+  duration: number;
+}
+
+interface ScheduledPeriod {
+  time: string;
+  subject: string;
+  classroom?: string;
+}
+
+let daysOfWeek = ["Wednesday", "Thursday","friday"];
+
+const TimetablePage = () => {
+  const [classrooms, setClassrooms] = useState<Classroom[]>([
+    { name: "D1", seats: 15, available: true },
+    { name: "D2", seats: 50, available: true },
+    { name: "D3", seats: 30, available: true },
+    { name: "D4", seats: 15, available: true },
+  ]);
+
+  const [courses, setCourses] = useState<Course[]>([
+    {
+      name: "Mathematics",
+      students: 25,
+      subjects: ["Algebra", "Calculus", "Geometry"],
+      sockets: [2, 1, 1],
+    },
+    {
+      name: "Physics",
+      students: 20,
+      subjects: ["Mechanics", "Electricity", "Optics"],
+      sockets: [1, 1, 1],
+    },
+  ]);
+
+  const [dayStructure, setDayStructure] = useState<DayStructure[]>([
+    { type: "breakfast", duration: 2 },
+    { type: "s", duration: 3 },
+    { type: "break", duration: 1 },
+    { type: "s", duration: 2 },
+    { type: "lunch", duration: 1 },
+    { type: "s", duration: 2 },
+  ]);
+
+  const [timetable, setTimetable] = useState<Array<ScheduledPeriod[]>>(
+    new Array(daysOfWeek.length).fill([]),
+  );
+
+  const [unscheduledSubjects, setUnscheduledSubjects] = useState<string[]>([]);
+
+  useEffect(() => {
+    let startingTime = 8 * 60;
+
+    let updatedTimetable: Array<ScheduledPeriod[]> = new Array(
+      daysOfWeek.length,
+    ).fill([]);
+
+    let coursesCopy = JSON.parse(JSON.stringify(courses));
+
+    for (let dayIndex = 0; dayIndex < daysOfWeek.length; dayIndex++) {
+      let day = daysOfWeek[dayIndex];
+      let dayTimetable: ScheduledPeriod[] = [];
+      let currentTime = startingTime;
+
+      for (
+        let periodIndex = 0;
+        periodIndex < dayStructure.length;
+        periodIndex++
+      ) {
+        const period = dayStructure[periodIndex];
+        const { type, duration } = period;
+        const startTime = currentTime;
+        currentTime += duration * 60;
+        const endTime = currentTime;
+
+        if (type === "s") {
+          let scheduled = false;
+
+          for (
+            let courseIndex = 0;
+            courseIndex < coursesCopy.length;
+            courseIndex++
+          ) {
+            let course = coursesCopy[courseIndex];
+
+            if (course.sockets[0] > 0) {
+              let classroom = getRandomClassroom(classrooms, course.students);
+
+              if (classroom)
+                dayTimetable.push({
+                  time: `${startTime / 60}:${(startTime % 60)
+                    .toString()
+                    .padStart(2, "0")} - ${endTime / 60}:${(endTime % 60)
+                    .toString()
+                    .padStart(2, "0")}`,
+                  subject: `${course.name}, ${course.subjects[0]}`,
+                  classroom: classroom.name,
+                });
+
+              course.sockets[0]--;
+
+              if (course.sockets[0] === 0) {
+                course.subjects.shift();
+                course.sockets.shift();
+              }
+
+              scheduled = true;
+              break;
+            }
+          }
+
+          if (!scheduled) {
+            dayTimetable.push({
+              time: `${startTime / 60}:${(startTime % 60)
+                .toString()
+                .padStart(2, "0")} - ${endTime / 60}:${(endTime % 60)
+                .toString()
+                .padStart(2, "0")}`,
+              subject: "Free",
+            });
+          }
+        } else {
+          dayTimetable.push({
+            time: `${startTime / 60}:${(startTime % 60)
+              .toString()
+              .padStart(2, "0")} - ${endTime / 60}:${(endTime % 60)
+              .toString()
+              .padStart(2, "0")}`,
+            subject: period.type,
+          });
+        }
+      }
+
+      updatedTimetable[dayIndex] = dayTimetable;
+    }
+
+    // Function to shuffle an array using the Fisher-Yates algorithm
+    const shuffleArray = (array: any[]): any[] => {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    };
+
+    setTimetable(updatedTimetable);
+
+    const unscheduled = coursesCopy.reduce(
+      (unscheduledSubjects: string[], course: Course) => {
+        if (course.subjects.length > 0) {
+          unscheduledSubjects.push(
+            ...course.subjects.map((subject) => `${course.name}, ${subject}`),
+          );
+        }
+        return unscheduledSubjects;
+      },
+      [],
+    );
+
+    setUnscheduledSubjects(unscheduled);
+  }, [classrooms, courses, dayStructure]);
+
+// Define getRandomClassroom function before using it
+function getRandomClassroom(classrooms: Classroom[], students: number): Classroom | null {
+  let availableClassrooms = classrooms.filter(
+    (classroom) => classroom.available && classroom.seats >= students,
+  );
+
+  if (availableClassrooms.length === 0) return null;
+
+  return availableClassrooms[
+    Math.floor(Math.random() * availableClassrooms.length)
+  ];
+}
+
+// Function to shuffle an array using the Fisher-Yates algorithm
+function shuffleArray(array: any[]): any[] {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// Function to shuffle properties of 's' type periods in an array using the Fisher-Yates algorithm
+function shuffleSTypePeriodsProperties(array: ScheduledPeriod[][], dayStructure: DayStructure[]): ScheduledPeriod[][] {
+  let sTypePeriods: ScheduledPeriod[] = [];
+
+  // Get 's' type periods from each day
+  dayStructure.forEach((period, index) => {
+    if (period.type === 's') {
+      array.forEach((day) => {
+        sTypePeriods.push({...day[index]}); // Create a copy of each 's' type period
+      });
+    }
+  });
+
+  // Shuffle the 's' type periods multiple times
+  for (let i = 0; i < 10; i++) {
+    sTypePeriods = shuffleArray(sTypePeriods);
+  }
+
+  // Replace 's' type periods with shuffled 's' type periods
+  array.forEach((day) => {
+    day.forEach((period, index) => {
+      if (dayStructure[index].type === 's') {
+        day[index] = sTypePeriods.shift()!;
+      }
+    });
+  });
+
+  return array;
+}
+
+
+
+const lol = shuffleSTypePeriodsProperties(timetable,dayStructure)
+
+  return (
+    <div>
+      {lol.map((day, index) => (
+        <div key={index}>
+          <h2>{`${daysOfWeek[index]}`}</h2>
+          {day.map((period, periodIndex) => (
+            <p key={periodIndex}>
+              {`${period.time}: ${period.subject}${
+                period.classroom ? ", " + period.classroom : ""
+              }`}
+            </p>
+          ))}
+        </div>
+      ))}
+      <div>
+        <h2>Unscheduled Subjects</h2>
+        {unscheduledSubjects.map((subject, index) => (
+          <p key={index}>{subject}</p>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default TimetablePage;
