@@ -24,9 +24,13 @@ export async function middleware(request: NextRequest) {
           new URL("/student/application/dashboard", request.url),
         );
       } else if (authUser.role === "LECTURE") {
-        return NextResponse.redirect(new URL("/staff/LECTURER", request.url));
-      } else if (authUser.role === "EO") {
-        return NextResponse.redirect(new URL("/staff/EO", request.url));
+        return NextResponse.redirect(
+          new URL("/staff/lecturer/dashboard", request.url),
+        );
+      } else if (authUser.role === "EXAMINATION_OFFICER") {
+        return NextResponse.redirect(
+          new URL("/staff/staff/examination_officer/dashboard", request.url),
+        );
       }
     }
 

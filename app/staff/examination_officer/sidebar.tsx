@@ -2,13 +2,18 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { RxDashboard } from "react-icons/rx";
 import { Path } from "@/types";
 
-interface Props {
-  links: Path[];
-}
+const links: Path[] = [
+  {
+    title: "dashboard",
+    path: "/staff/examination_officer/dashboard",
+    Icon: RxDashboard,
+  },
+];
 
-const Sidebar = ({ links }: Props) => {
+const Sidebar = () => {
   const pathname = usePathname();
   return (
     <div className="fixed bottom-0 left-0 hidden h-[calc(100vh-4rem)] w-52 rounded-tr-lg border-r border-gray-200 bg-gray-50 shadow-lg lg:flex">

@@ -1,0 +1,7 @@
+<button onClick={() => {
+  let updatedTimetable = JSON.parse(JSON.stringify(timetable)); // Make a deep copy of your timetable
+  updatedTimetable = shuffleSTypePeriodsProperties(updatedTimetable, dayStructure);
+  setTimetable(updatedTimetable); // Update the state with the new shuffled timetable
+}}>
+  Refresh Timetable
+</button>

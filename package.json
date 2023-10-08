@@ -9,6 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@fullcalendar/daygrid": "^6.1.9",
+    "@fullcalendar/interaction": "^6.1.9",
+    "@fullcalendar/react": "^6.1.9",
     "@hookform/resolvers": "^3.3.1",
     "@prisma/client": "^5.3.1",
     "@types/node": "20.6.5",
