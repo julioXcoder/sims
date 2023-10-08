@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import FullCalendar from "@fullcalendar/react"; // Import Calendar
-import { EventApi, DateSelectArg } from "@fullcalendar/core";
+import React from "react";
+import FullCalendar from "@fullcalendar/react";
+import { EventApi, DateSelectArg, EventClickArg } from "@fullcalendar/core";
 import interactionPlugin from "@fullcalendar/interaction";
 import dayGridPlugin from "@fullcalendar/daygrid";
-import { z } from "zod";
+import timeGridPlugin from "@fullcalendar/timegrid";
 
-// Define an interface for the event
 interface Event {
+  id?: string;
   start: string;
   end: string;
   allDay: boolean;
@@ -16,22 +16,34 @@ interface Event {
   description: string;
 }
 
-const ExaminationOfficerDashboardPage = () => {
-  const [weekendsVisible, setWeekendsVisible] = useState(true);
-  const [currentEvents, setCurrentEvents] = useState<EventApi[]>([]);
+interface ExaminationOfficerDashboardPageState {
+  weekendsVisible: boolean;
+  currentEvents: EventApi[];
+  selectedEvent: Event | null;
+}
 
-  // Use the Event interface as the type for your state
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+class ExaminationOfficerDashboardPage extends React.Component<
+  {},
+  ExaminationOfficerDashboardPageState
+> {
+  calendarComponentRef = React.createRef<FullCalendar>();
 
-  // Provide the type for calendarRef
-  const calendarRef = useRef<FullCalendar | null>(null);
+  constructor(props: {}) {
+    super(props);
+    this.state = {
+      weekendsVisible: true,
+      currentEvents: [],
+      selectedEvent: null,
+    };
+  }
 
-  const handleEvents = (events: EventApi[]) => {
-    setCurrentEvents(events);
+  handleEvents = (events: EventApi[]) => {
+    this.setState({ currentEvents: events });
   };
 
-  const handleDateSelect = (selectInfo: DateSelectArg) => {
+  handleDateSelect = (selectInfo: DateSelectArg) => {
     const data = {
+      id: Date.now().toString(),
       start: selectInfo.startStr,
       end: selectInfo.endStr,
       allDay: selectInfo.allDay,
@@ -39,87 +51,159 @@ const ExaminationOfficerDashboardPage = () => {
       description: "",
     };
 
-    setSelectedEvent(data);
+    this.setState({ selectedEvent: data });
     const modal = document.getElementById("modal_1") as HTMLDialogElement;
     modal.showModal();
   };
 
-  // Function to handle saving of the event
-  const handleSaveEvent = () => {
-    // Logic to save the event goes here
-    console.log("Event saved:", selectedEvent);
+  handleEventClick = (clickInfo: EventClickArg) => {
+    this.setState({
+      selectedEvent: {
+        id: clickInfo.event.id,
+        start: clickInfo.event.startStr,
+        end: clickInfo.event.endStr,
+        allDay: clickInfo.event.allDay,
+        title: clickInfo.event.title,
+        description: clickInfo.event.extendedProps.description,
+      },
+    });
+    const modal = document.getElementById("modal_2") as HTMLDialogElement;
+    modal.showModal();
+  };
 
-    if (selectedEvent && calendarRef.current) {
-      // Create a new event of type EventApi and add it to currentEvents
-      const calendarApi = calendarRef.current.getApi();
-      const newEvent = calendarApi.addEvent(selectedEvent);
+  handleSaveEvent = () => {
+    if (this.state.selectedEvent && this.calendarComponentRef.current) {
+      const calendarApi = this.calendarComponentRef.current.getApi();
+      const newEvent = calendarApi.addEvent({
+        ...this.state.selectedEvent,
+        extendedProps: { description: this.state.selectedEvent.description },
+      });
 
-      // Check if newEvent is not null before adding it to currentEvents
       if (newEvent) {
-        setCurrentEvents([...currentEvents, newEvent]);
+        this.setState({
+          currentEvents: [...this.state.currentEvents, newEvent],
+        });
       }
     }
 
-    // Close the modal after saving the event
     const modal = document.getElementById("modal_1") as HTMLDialogElement;
     modal.close();
-
-    // Clear the selectedEvent state
-    setSelectedEvent(null);
+    this.setState({ selectedEvent: null });
   };
 
-  return (
-    <div>
+  handleDeleteEvent = () => {
+    if (
+      this.state.selectedEvent &&
+      this.state.selectedEvent.id &&
+      this.calendarComponentRef.current
+    ) {
+      const calendarApi = this.calendarComponentRef.current.getApi();
+      const eventToRemove = calendarApi.getEventById(
+        this.state.selectedEvent.id,
+      );
+
+      if (eventToRemove) {
+        eventToRemove.remove();
+        this.setState({
+          currentEvents: this.state.currentEvents.filter(
+            (event) =>
+              this.state.selectedEvent &&
+              this.state.selectedEvent.id &&
+              event.id !== this.state.selectedEvent.id,
+          ),
+        });
+
+        const modal = document.getElementById("modal_2") as HTMLDialogElement;
+        modal.close();
+        this.setState({ selectedEvent: null });
+      }
+    }
+  };
+
+  render() {
+    return (
       <div>
-        <FullCalendar
-          ref={calendarRef}
-          plugins={[dayGridPlugin, interactionPlugin]}
-          initialView="dayGridMonth"
-          editable={true}
-          selectable={true}
-          selectMirror={true}
-          dayMaxEvents={true}
-          weekends={weekendsVisible}
-          eventsSet={handleEvents}
-          select={handleDateSelect} // Handle date selection
-          eventAdd={(eventAddInfo) => console.log(eventAddInfo)}
-          eventChange={(eventChangeInfo) => console.log(eventChangeInfo)}
-          eventRemove={(eventRemoveInfo) => console.log(eventRemoveInfo)}
-        />
-      </div>
-      <dialog id={"modal_1"} className="modal">
-        <div className="modal-box">
-          {selectedEvent && (
-            <div>
-              {/* Add input fields for the event details */}
-              <input type="datetime-local" placeholder="Start Time" />
-              <input type="datetime-local" placeholder="End Time" />
-              <input type="checkbox" id="allDay" name="allDay" />
-              <label htmlFor="allDay">All Day</label>
-              <input
-                type="text"
-                placeholder="Title"
-                onChange={(e) =>
-                  setSelectedEvent({ ...selectedEvent, title: e.target.value })
-                }
-              />
-              <textarea
-                placeholder="Description"
-                onChange={(e) =>
-                  setSelectedEvent({
-                    ...selectedEvent,
-                    description: e.target.value,
-                  })
-                }
-              ></textarea>
-              {/* Add a button to save the event */}
-              <button onClick={handleSaveEvent}>Save Event</button>
-            </div>
-          )}
+        <div>
+          <FullCalendar
+            ref={this.calendarComponentRef}
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            initialView="dayGridMonth"
+            editable={true}
+            selectable={true}
+            headerToolbar={{
+              start: "prev,next today",
+              center: "title",
+              end: "dayGridMonth,timeGridWeek,timeGridDay",
+            }}
+            selectMirror={true}
+            dayMaxEvents={true}
+            weekends={this.state.weekendsVisible}
+            eventsSet={this.handleEvents}
+            select={this.handleDateSelect}
+            eventClick={this.handleEventClick}
+          />
         </div>
-      </dialog>
-    </div>
-  );
-};
+        <dialog id={"modal_1"} className="modal">
+          <div className="modal-box">
+            {this.state.selectedEvent && (
+              <div>
+                {/* Add input fields for the event details */}
+                <input type="time" placeholder="Start Time" />
+                <input type="datetime-local" placeholder="End Time" />
+                <input type="checkbox" id="allDay" name="allDay" />
+                <label htmlFor="allDay">All Day</label>
+                <input
+                  type="text"
+                  placeholder="Title"
+                  onChange={(e) =>
+                    this.state.selectedEvent &&
+                    this.setState({
+                      selectedEvent: {
+                        ...this.state.selectedEvent,
+                        title: e.target.value,
+                      },
+                    })
+                  }
+                />
+
+                <textarea
+                  placeholder="Description"
+                  onChange={(e) =>
+                    this.state.selectedEvent &&
+                    this.setState({
+                      selectedEvent: {
+                        ...this.state.selectedEvent,
+                        description: e.target.value,
+                      },
+                    })
+                  }
+                ></textarea>
+
+                {/* Add a button to save the event */}
+                <button onClick={this.handleSaveEvent}>Save Event</button>
+              </div>
+            )}
+          </div>
+        </dialog>
+        <dialog id={"modal_2"} className="modal">
+          <div className="modal-box">
+            {this.state.selectedEvent && (
+              <div>
+                {/* Show the event details */}
+                <p>Title: {this.state.selectedEvent.title}</p>
+                <p>Description: {this.state.selectedEvent.description}</p>
+                <p>Start: {this.state.selectedEvent.start}</p>
+                <p>End: {this.state.selectedEvent.end}</p>
+                <p>All Day: {this.state.selectedEvent.allDay ? "Yes" : "No"}</p>
+                {/* Add a button to delete the event */}
+                <button onClick={this.handleDeleteEvent}>Delete Event</button>
+              </div>
+            )}
+          </div>
+        </dialog>
+      </div>
+    );
+  }
+}
 
 export default ExaminationOfficerDashboardPage;
