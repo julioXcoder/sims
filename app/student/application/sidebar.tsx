@@ -7,6 +7,7 @@ import { Path } from "@/types";
 import { RxDashboard } from "react-icons/rx";
 import { FaCreditCard } from "react-icons/fa";
 import { FaListCheck } from "react-icons/fa6";
+import { BsNewspaper } from "react-icons/bs";
 
 const links: Path[] = [
   {
@@ -19,6 +20,11 @@ const links: Path[] = [
     title: "payments",
     path: "/student/application/results/payments",
     Icon: FaCreditCard,
+  },
+  {
+    title: "gazette",
+    path: "/student/application/gazette",
+    Icon: BsNewspaper,
   },
 ];
 
