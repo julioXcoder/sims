@@ -8,6 +8,7 @@ import { RxDashboard } from "react-icons/rx";
 import { FaCreditCard } from "react-icons/fa";
 import { FaListCheck } from "react-icons/fa6";
 import { BsNewspaper } from "react-icons/bs";
+import { SiGoogleclassroom } from "react-icons/si";
 
 const links: Path[] = [
   {
@@ -25,6 +26,11 @@ const links: Path[] = [
     title: "gazette",
     path: "/student/application/gazette",
     Icon: BsNewspaper,
+  },
+  {
+    title: "classroom",
+    path: "/student/application/classroom",
+    Icon: SiGoogleclassroom,
   },
 ];
 
