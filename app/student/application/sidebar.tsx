@@ -10,6 +10,8 @@ import { FaListCheck } from "react-icons/fa6";
 import { BsNewspaper } from "react-icons/bs";
 import { SiGoogleclassroom } from "react-icons/si";
 
+const studentPosition = "journalist"; // This should be dynamically set based on the logged in student's position
+
 const links: Path[] = [
   {
     title: "dashboard",
@@ -22,11 +24,15 @@ const links: Path[] = [
     path: "/student/application/results/payments",
     Icon: FaCreditCard,
   },
-  {
-    title: "gazette",
-    path: "/student/application/gazette",
-    Icon: BsNewspaper,
-  },
+  ...(studentPosition !== "journalist"
+    ? [
+        {
+          title: "gazette",
+          path: "/student/application/gazette",
+          Icon: BsNewspaper,
+        },
+      ]
+    : []),
   {
     title: "classroom",
     path: "/student/application/classroom",

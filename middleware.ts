@@ -2,6 +2,37 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyAuth } from "./lib";
 
+const roleConfig: {
+  [key: string]: {
+    dashboardUrl: string;
+    allowedUrls: string[];
+  };
+} = {
+  STUDENT: {
+    dashboardUrl: "/student/application/dashboard",
+    allowedUrls: ["/student"],
+  },
+  LECTURE: {
+    dashboardUrl: "/staff/lecturer/dashboard",
+    allowedUrls: ["/staff/lecturer"],
+  },
+  EXAMINATION_OFFICER: {
+    dashboardUrl: "/staff/examination_officer/dashboard",
+    allowedUrls: ["/staff/examination_officer"],
+  },
+  // Add more roles and their configurations here
+};
+
+const pathToAuthUrl: {
+  [key: string]: string;
+} = {
+  "/staff": "/staff/auth",
+  "/student": "/student/auth",
+  // Add more paths and their auth URLs here
+};
+
+const authPaths = ["/student/auth", "/staff/auth"];
+
 export async function middleware(request: NextRequest) {
   let token = request.cookies.get("token")?.value;
   const authUser =
@@ -13,49 +44,40 @@ export async function middleware(request: NextRequest) {
 
     response.headers.set("userId", userId);
 
-    if (
-      authUser &&
-      (request.nextUrl.pathname.startsWith("/staff/auth") ||
-        request.nextUrl.pathname.startsWith("/student/auth"))
-    ) {
-      // Redirect to the user's dashboard or previous page
-      if (authUser.role === "STUDENT") {
-        return NextResponse.redirect(
-          new URL("/student/application/dashboard", request.url),
-        );
-      } else if (authUser.role === "LECTURE") {
-        return NextResponse.redirect(
-          new URL("/staff/lecturer/dashboard", request.url),
-        );
-      } else if (authUser.role === "EXAMINATION_OFFICER") {
-        return NextResponse.redirect(
-          new URL("/staff/staff/examination_officer/dashboard", request.url),
-        );
-      }
-    }
+    const config = roleConfig[authUser.role];
 
-    if (
-      (authUser.role === "LECTURE" && request.url.includes("/student")) ||
-      (authUser.role === "STUDENT" && request.url.includes("/staff"))
-    ) {
-      return NextResponse.redirect(new URL("/error", request.url));
+    if (config) {
+      const { dashboardUrl, allowedUrls } = config;
+
+      if (
+        authUser &&
+        authPaths.some((path) => request.nextUrl.pathname.startsWith(path))
+      ) {
+        if (dashboardUrl) {
+          return NextResponse.redirect(new URL(dashboardUrl, request.url));
+        }
+      }
+
+      if (
+        !allowedUrls.some(
+          (url) =>
+            request.nextUrl.pathname === url ||
+            request.nextUrl.pathname.startsWith(url + "/"),
+        )
+      ) {
+        return NextResponse.redirect(new URL("/error", request.url));
+      }
     }
 
     return response;
   }
 
-  if (
-    (request.nextUrl.pathname.startsWith("/student/auth") ||
-      request.nextUrl.pathname.startsWith("/staff/auth")) &&
-    !authUser
-  )
-    return;
-
-  if (!authUser) {
-    if (request.nextUrl.pathname.startsWith("/staff")) {
-      return NextResponse.redirect(new URL("/staff/auth", request.url));
-    } else if (request.nextUrl.pathname.startsWith("/student")) {
-      return NextResponse.redirect(new URL("/student/auth", request.url));
+  for (const path in pathToAuthUrl) {
+    if (
+      request.nextUrl.pathname.startsWith(path) &&
+      request.nextUrl.pathname !== pathToAuthUrl[path]
+    ) {
+      return NextResponse.redirect(new URL(pathToAuthUrl[path], request.url));
     }
   }
 }
